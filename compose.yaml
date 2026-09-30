@@ -1,6 +1,12 @@
 services:
   open-seo:
-    image: ${OPEN_SEO_IMAGE:-ghcr.io/every-app/open-seo:latest}
+    # Build from this checkout on every `docker compose up`. Do not pull the
+    # published GHCR image; that build is not this tree.
+    build:
+      context: .
+      dockerfile: Dockerfile.selfhost
+    image: open-seo:local
+    pull_policy: build
     restart: unless-stopped
     # Forward EVERY .env value into the container. The explicit `environment:`
     # list below still wins for the values it names — without this, any .env
