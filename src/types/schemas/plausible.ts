@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 // Plausible `date_range` presets accepted by the Stats API v2.
-export const PLAUSIBLE_DATE_RANGES = [
+const PLAUSIBLE_DATE_RANGES = [
   "day",
   "7d",
   "28d",
@@ -14,7 +14,7 @@ export const PLAUSIBLE_DATE_RANGES = [
   "all",
 ] as const;
 
-export const PLAUSIBLE_DIMENSIONS = ["page", "source"] as const;
+const PLAUSIBLE_DIMENSIONS = ["page", "source"] as const;
 
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use YYYY-MM-DD");
 

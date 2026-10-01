@@ -32,7 +32,7 @@ const MINIMAX_M3 = "minimax/minimax-m3";
  * Sync on purpose: Think's `getModel()` hook is sync and runs on every turn,
  * so the SAM agent reads the key/model from its DO env and builds here.
  */
-export function buildChatAgentModel(
+function buildChatAgentModel(
   apiKey: string,
   modelId?: string,
   reasoningEffort: "max" | "low" = "max",

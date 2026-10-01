@@ -21,11 +21,11 @@ export type PlausibleErrorKind =
   | "network"
   | "malformed_response";
 
-export type PlausibleResult<T> =
+type PlausibleResult<T> =
   | { ok: true; data: T }
   | { ok: false; kind: PlausibleErrorKind; message: string };
 
-export type PlausibleQuery = {
+type PlausibleQuery = {
   siteId: string;
   metrics: string[];
   /** A preset such as "30d" / "month" / "all", or [startDate, endDate]. */
