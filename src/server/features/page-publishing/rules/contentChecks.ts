@@ -106,8 +106,7 @@ function h1Check(body: string): CheckResult {
     return {
       id: "h1",
       level: "warning",
-      message:
-        "The body has an H1 in addition to the title; the page will have two H1s unless the template skips the title.",
+      message: "正文里还有一个 H1；除非模板不渲染标题，页面会有两个 H1。",
     };
   }
   return {

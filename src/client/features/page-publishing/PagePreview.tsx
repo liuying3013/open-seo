@@ -59,7 +59,11 @@ export function PagePreview({
       <div className="overflow-x-auto rounded-xl border border-base-300 bg-base-200 p-3">
         <article
           className="mx-auto rounded-lg bg-base-100 p-6 text-base-content shadow-sm"
-          style={{ width: WIDTHS[viewport], maxWidth: "none" }}
+          style={{
+            // Desktop fills the column up to 1280px so the text is never cut off.
+            width: viewport === "desktop" ? "100%" : WIDTHS.mobile,
+            maxWidth: WIDTHS[viewport],
+          }}
         >
           <div className="mb-6 space-y-1 border-b border-base-300 pb-4">
             <div className="break-all text-xs text-success">
