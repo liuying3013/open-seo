@@ -23,6 +23,7 @@ data, or sensitive paths.
 
 ## Resolved
 
+- [x] `2026-10-01T15:25:00Z` — `claude` — The host publisher crashed on every cron run with `ReferenceError: File is not defined`: cron's minimal `PATH` picked an older system Node, and undici 7 (via cheerio) needs Node 20+. The same cron environment also lacked the proxy variables an interactive shell had. Resolved 2026-10-02: `scripts/publisher/README.md` states the Node and cron-environment requirements.
 - [x] `2026-09-17T18:50:14Z` — `codex` — Fumadocs MDX 11 compiles `.md?raw` imports into components, so shared prompt imports pass type checking but crash docs rendering with `trim is not a function`. Resolved 2026-09-17: the web Vite config leaves `?raw` imports to Vite; browser-check shared Markdown prompts when changing this integration.
 
 - [x] `2026-08-20T20:36:32Z` — `codex` — The preview Access check immediately classified a workers.dev 404 as public. Resolved 2026-09-05: 404s use the existing bounded retry loop; exhaustion fails without claiming the preview is protected or public.
