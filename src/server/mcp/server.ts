@@ -87,6 +87,15 @@ import {
   deleteSiteAuditTool,
   listSiteAuditsTool,
 } from "@/server/mcp/tools/site-audit-cleanup-tools";
+import {
+  addOpportunitiesTool,
+  getOpportunityPipelineStatusTool,
+  getOpportunityReportTool,
+  getOpportunityTool,
+  listOpportunitiesTool,
+  reviewOpportunityTool,
+  runOpportunityScanTool,
+} from "@/server/mcp/tools/opportunity-intel";
 import { whoamiTool } from "@/server/mcp/tools/whoami";
 
 type ToolSchema = z.ZodType | z.ZodRawShape;
@@ -238,6 +247,13 @@ export function createOpenSeoMcpServer(authProps: McpProps) {
   register(listReportTemplatesTool);
   register(saveReportTemplateTool);
   register(deleteReportTemplateTool);
+  register(addOpportunitiesTool);
+  register(runOpportunityScanTool);
+  register(getOpportunityPipelineStatusTool);
+  register(listOpportunitiesTool);
+  register(getOpportunityTool);
+  register(getOpportunityReportTool);
+  register(reviewOpportunityTool);
 
   return server;
 }

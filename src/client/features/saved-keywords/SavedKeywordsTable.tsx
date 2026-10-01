@@ -5,8 +5,8 @@ import {
   type RowSelectionState,
   type SortingState,
 } from "@tanstack/react-table";
-import { Search } from "lucide-react";
-import { useMemo } from "react";
+import { Globe, Search } from "lucide-react";
+import { useMemo, type ReactNode } from "react";
 import {
   AppDataTable,
   makeSelectionColumn,
@@ -33,6 +33,9 @@ export function SavedKeywordsTable({
   hasActiveFilters,
   onRowSelectionChange,
   onSortingChange,
+  onKeywordClick,
+  keywordsWithStoredSerp,
+  renderRowDetail,
 }: {
   rows: SavedKeywordRow[];
   rowSelection: RowSelectionState;
@@ -41,6 +44,11 @@ export function SavedKeywordsTable({
   hasActiveFilters: boolean;
   onRowSelectionChange: OnChangeFn<RowSelectionState>;
   onSortingChange: OnChangeFn<SortingState>;
+  /** Opens the zero-cost stored-data panel for the clicked keyword. */
+  onKeywordClick: (row: SavedKeywordRow) => void;
+  /** "keyword|locationCode" keys that have an archived SERP snapshot. */
+  keywordsWithStoredSerp: Set<string>;
+  renderRowDetail: (row: SavedKeywordRow) => ReactNode;
 }) {
   const selectAnchorRef = useSelectionAnchor();
   const columns = useMemo<ColumnDef<SavedKeywordRow>[]>(
@@ -50,8 +58,34 @@ export function SavedKeywordsTable({
         header: ({ column }) => (
           <SortableHeader column={column} label="Keyword" />
         ),
-        cell: ({ getValue }) => (
-          <span className="font-medium">{getValue()}</span>
+        // Opens the stored-data panel (free); the panel offers the charged
+        // full-research jump explicitly.
+        cell: ({ getValue, row }) => (
+          <span className="flex items-center gap-1.5">
+            <button
+              type="button"
+              className="link-hover link text-left font-medium"
+              onClick={(event) => {
+                event.stopPropagation();
+                onKeywordClick(row.original);
+              }}
+            >
+              {getValue()}
+            </button>
+            {keywordsWithStoredSerp.has(
+              `${row.original.keyword}|${row.original.locationCode}`,
+            ) ? (
+              <span
+                className="tooltip"
+                data-tip="Archived SERP analysis — click the keyword to view"
+              >
+                <span className="badge badge-info badge-sm gap-1">
+                  <Globe className="size-3" />
+                  SERP
+                </span>
+              </span>
+            ) : null}
+          </span>
         ),
       }),
       columnHelper.accessor("searchVolume", {
@@ -115,7 +149,7 @@ export function SavedKeywordsTable({
         ),
       }),
     ],
-    [selectAnchorRef],
+    [selectAnchorRef, onKeywordClick, keywordsWithStoredSerp],
   );
   const table = useAppTable({
     data: rows,
@@ -135,6 +169,7 @@ export function SavedKeywordsTable({
       isLoading={isLoading}
       loading={<SavedKeywordsSkeleton />}
       empty={<SavedKeywordsEmptyState hasActiveFilters={hasActiveFilters} />}
+      renderRowDetail={(row) => renderRowDetail(row.original)}
     />
   );
 }

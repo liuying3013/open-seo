@@ -52,6 +52,15 @@ export const KEYWORD_INTENT_ORDER: KeywordIntent[] = [
 
 const KEYWORD_INTENT_SET = new Set<string>(KEYWORD_INTENT_ORDER);
 
+export function toKeywordIntent(
+  intent: string | null | undefined,
+): KeywordIntent {
+  return intent && KEYWORD_INTENT_SET.has(intent)
+    ? // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- membership checked above
+      (intent as KeywordIntent)
+    : "unknown";
+}
+
 /** Parses the stored intents string into a list of valid, de-duplicated intents. */
 export function parseIntentFilter(value: string): KeywordIntent[] {
   if (!value) return [];

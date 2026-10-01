@@ -1,6 +1,7 @@
-import { ChevronLeft, ChevronRight, ExternalLink } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { ExportToSheetsButton } from "@/client/components/table/ExportToSheetsButton";
 import type { SerpResultItem } from "@/types/keywords";
+import { SerpResultsTable } from "./SerpResultsTable";
 
 export function SerpAnalysisCard({
   items,
@@ -68,7 +69,7 @@ export function SerpAnalysisCard({
       {pageItems.length === 0 && loadingMore ? (
         <SerpAnalysisLoadingState />
       ) : (
-        <SerpAnalysisTable items={pageItems} />
+        <SerpResultsTable items={pageItems} />
       )}
       <SerpAnalysisPagination
         page={page}
@@ -77,50 +78,6 @@ export function SerpAnalysisCard({
         canLoadMore={canLoadMore}
         onPageChange={onPageChange}
       />
-    </div>
-  );
-}
-
-function SerpAnalysisTable({ items }: { items: SerpResultItem[] }) {
-  return (
-    <div className="overflow-x-auto">
-      <table className="table table-xs w-full">
-        <thead>
-          <tr className="text-xs text-base-content/60">
-            <th className="w-8">#</th>
-            <th>Page</th>
-          </tr>
-        </thead>
-        <tbody>
-          {items.map((item) => (
-            <tr
-              key={`${item.rank}-${item.url}`}
-              className="hover:bg-base-200/50"
-            >
-              <td className="font-mono text-base-content/50 text-xs">
-                {item.rank}
-              </td>
-              <td className="min-w-0 max-w-0">
-                <div className="flex flex-col gap-0.5">
-                  <a
-                    href={item.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="font-medium text-primary hover:underline truncate flex items-center gap-1"
-                    title={item.title}
-                  >
-                    {item.title || item.url}
-                    <ExternalLink className="size-3 shrink-0 opacity-40" />
-                  </a>
-                  <span className="text-xs text-base-content/40 truncate">
-                    {item.domain}
-                  </span>
-                </div>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
     </div>
   );
 }

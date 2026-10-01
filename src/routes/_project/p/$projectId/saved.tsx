@@ -25,6 +25,7 @@ import {
 } from "@/client/features/saved-keywords/SavedKeywordsModals";
 import { SavedKeywordsPagination } from "@/client/features/saved-keywords/SavedKeywordsPagination";
 import { SavedKeywordsStatus } from "@/client/features/saved-keywords/SavedKeywordsStatus";
+import { SavedKeywordDetailPanel } from "@/client/features/saved-keywords/SavedKeywordDetailPanel";
 import { SavedKeywordsTable } from "@/client/features/saved-keywords/SavedKeywordsTable";
 import { compileSavedKeywordsFilters } from "@/client/features/saved-keywords/savedKeywordsFilterTypes";
 import {
@@ -42,6 +43,7 @@ import {
   removeSavedKeywords,
   updateSavedKeywordTags,
 } from "@/serverFunctions/keywords";
+import { listStoredSerpKeywordKeys } from "@/serverFunctions/opportunity-intel";
 import type { SavedKeywordTag } from "@/types/keywords";
 
 export const Route = createFileRoute("/_project/p/$projectId/saved")({
@@ -55,6 +57,16 @@ function SavedKeywordsPage() {
   const queryClient = useQueryClient();
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
+  const [detailKeywordId, setDetailKeywordId] = useState<string | null>(null);
+  // Marks rows whose SERP the discovery funnel already archived.
+  const storedSerpQuery = useQuery({
+    queryKey: ["stored-serp-keys", projectId],
+    queryFn: () => listStoredSerpKeywordKeys({ data: { projectId } }),
+  });
+  const storedSerpKeys = useMemo(
+    () => new Set(storedSerpQuery.data ?? []),
+    [storedSerpQuery.data],
+  );
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] =
     useState<(typeof SAVED_KEYWORD_PAGE_SIZES)[number]>(50);
@@ -286,6 +298,7 @@ function SavedKeywordsPage() {
             <SavedKeywordsStatus
               totalCount={totalCount}
               isFetching={isFetching && !isLoading}
+              storedSerpCount={storedSerpKeys.size}
             />
             <SavedKeywordsTable
               rows={savedKeywords}
@@ -295,6 +308,20 @@ function SavedKeywordsPage() {
               hasActiveFilters={hasActiveFilters}
               onRowSelectionChange={setRowSelection}
               onSortingChange={handleSortingChange}
+              onKeywordClick={(row) =>
+                setDetailKeywordId((current) =>
+                  current === row.id ? null : row.id,
+                )
+              }
+              keywordsWithStoredSerp={storedSerpKeys}
+              renderRowDetail={(row) =>
+                row.id === detailKeywordId ? (
+                  <SavedKeywordDetailPanel
+                    row={row}
+                    onClose={() => setDetailKeywordId(null)}
+                  />
+                ) : null
+              }
             />
           </div>
 

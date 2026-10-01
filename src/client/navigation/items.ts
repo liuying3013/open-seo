@@ -11,6 +11,7 @@ import {
   MessageSquare,
   Search,
   Sparkles,
+  Telescope,
   TrendingUp,
 } from "lucide-react";
 import { linkOptions } from "@tanstack/react-router";
@@ -94,6 +95,19 @@ const aiNavItem = linkOptions({
   label: "Agent setup",
   icon: Bot,
 });
+
+const opportunitiesNavItem = linkOptions({
+  to: "/opportunities" as const,
+  label: "Opportunities",
+  icon: Telescope,
+});
+
+// Always-visible sidebar group. Discover holds the cross-project opportunity
+// funnel (specs/0012) — it has no project context by design.
+export const discoverNavGroup = {
+  label: "Discover",
+  items: [opportunitiesNavItem],
+};
 
 // Shown only when no project is selected; with a project, Agent setup lives in
 // the "AI" group below.

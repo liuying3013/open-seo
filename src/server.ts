@@ -193,6 +193,33 @@ export default {
     _ctx: ExecutionContext,
   ) {
     if (controller.cron === MCP_OAUTH_PURGE_CRON) {
+      // Opportunity-intel retention rides the daily trigger: snapshots older
+      // than 180 days are dropped (newest 3 per keyword+location kept);
+      // REJECTED opportunities additionally lose their raw result rows after
+      // 90 days (snapshot headers with gap analysis survive).
+      try {
+        const { OpportunitySerpRepository } =
+          await import("@/server/features/opportunity-intel/repositories/OpportunitySerpRepository");
+        const day = 24 * 60 * 60 * 1000;
+        const prunedSnapshots = await withPgClient(() =>
+          OpportunitySerpRepository.pruneOlderThan(
+            new Date(Date.now() - 180 * day).toISOString(),
+            3,
+          ),
+        );
+        const emptiedRejected = await withPgClient(() =>
+          OpportunitySerpRepository.deleteResultsForRejectedOlderThan(
+            new Date(Date.now() - 90 * day).toISOString(),
+          ),
+        );
+        if (prunedSnapshots > 0 || emptiedRejected > 0) {
+          console.log(
+            `[opportunity-intel] pruned ${prunedSnapshots} snapshots, emptied ${emptiedRejected} rejected snapshots`,
+          );
+        }
+      } catch (err) {
+        console.error("[opportunity-intel] retention prune failed:", err);
+      }
       // Only hosted mode runs the OAuth provider (and has OAUTH_KV bound).
       if (isHostedAuthMode(getAuthMode(env.AUTH_MODE))) {
         const result = await openSeoOAuthProvider.purgeExpiredData(

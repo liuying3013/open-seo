@@ -2,6 +2,10 @@ import {
   createOpenRouter,
   type LanguageModelV3,
 } from "@openrouter/ai-sdk-provider";
+import {
+  getOptionalEnvValue,
+  getRequiredEnvValue,
+} from "@/server/lib/runtime-env";
 
 // OpenRouter model slug used for the SAM in-app chat agent. Override with
 // OPENROUTER_MODEL to swap models without a code change.
@@ -58,4 +62,24 @@ export function buildChatAgentModel(
     usage: { include: true },
     extraBody: { reasoning: { effort: reasoningEffort } },
   });
+}
+
+/**
+ * Model for server-side structured generation (opportunity-intel). Reads the
+ * key/model from env like the SAM agent, at low reasoning effort since these
+ * are classification calls. An optional OPENROUTER_BASE_URL points at an
+ * OpenAI-compatible relay: that skips the OpenRouter-specific request
+ * extensions (usage accounting, provider routing, ZDR) because strict
+ * gateways reject unknown body fields.
+ */
+export async function getStructuredLlmModel(): Promise<LanguageModelV3> {
+  const apiKey = await getRequiredEnvValue("OPENROUTER_API_KEY");
+  const modelId = await getOptionalEnvValue("OPENROUTER_MODEL");
+  const baseUrl = await getOptionalEnvValue("OPENROUTER_BASE_URL");
+  if (baseUrl) {
+    return createOpenRouter({ apiKey, baseURL: baseUrl })(
+      modelId ?? DEFAULT_CHAT_AGENT_MODEL,
+    );
+  }
+  return buildChatAgentModel(apiKey, modelId, "low");
 }

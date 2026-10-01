@@ -1,6 +1,7 @@
 import { getDatabaseProvider } from "./provider";
 import * as sqliteApp from "./app.schema";
 import * as sqliteCandidateKeywords from "./candidate-keywords.schema";
+import * as sqliteOpportunityIntel from "./opportunity-intel.schema";
 import * as sqliteProjectContext from "./project-context.schema";
 import * as sqliteReports from "./reports.schema";
 import * as sqliteReportTemplates from "./report-templates.schema";
@@ -13,6 +14,7 @@ import * as sqliteGsc from "./gsc.schema";
 import * as sqliteTelemetry from "./telemetry.schema";
 import * as pgApp from "./pg/app.schema";
 import * as pgCandidateKeywords from "./pg/candidate-keywords.schema";
+import * as pgOpportunityIntel from "./pg/opportunity-intel.schema";
 import * as pgProjectContext from "./pg/project-context.schema";
 import * as pgReports from "./pg/reports.schema";
 import * as pgReportTemplates from "./pg/report-templates.schema";
@@ -36,6 +38,7 @@ import * as pgTelemetry from "./pg/telemetry.schema";
 // parity test is its drift guard.
 type AppSchema = typeof sqliteApp &
   typeof sqliteCandidateKeywords &
+  typeof sqliteOpportunityIntel &
   typeof sqliteProjectContext &
   typeof sqliteReports &
   typeof sqliteReportTemplates &
@@ -52,6 +55,7 @@ const runtimeSchema =
     ? {
         ...pgApp,
         ...pgCandidateKeywords,
+        ...pgOpportunityIntel,
         ...pgProjectContext,
         ...pgReports,
         ...pgReportTemplates,
@@ -66,6 +70,7 @@ const runtimeSchema =
     : {
         ...sqliteApp,
         ...sqliteCandidateKeywords,
+        ...sqliteOpportunityIntel,
         ...sqliteProjectContext,
         ...sqliteReports,
         ...sqliteReportTemplates,
@@ -89,6 +94,17 @@ export const {
   savedKeywordTagAssignments,
   keywordMetrics,
   candidateKeywords,
+  opportunities,
+  opportunityRelationships,
+  opportunityKeywords,
+  opportunitySerpSnapshots,
+  opportunitySerpResults,
+  opportunityScores,
+  opportunityDecisionLog,
+  opportunityRuns,
+  opportunityReports,
+  opportunityCostEvents,
+  opportunityBudgets,
   rankTrackingConfigs,
   rankTrackingKeywords,
   rankCheckRuns,

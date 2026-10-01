@@ -12,6 +12,7 @@ import {
   type TableOptions,
 } from "@tanstack/react-table";
 import {
+  Fragment,
   useRef,
   type MouseEvent,
   type MutableRefObject,
@@ -128,6 +129,7 @@ export function AppDataTable<TData>({
   getRowClassName,
   getRowProps,
   getCellClassName,
+  renderRowDetail,
   fixedLayout,
   stickyHeader,
 }: {
@@ -143,6 +145,8 @@ export function AppDataTable<TData>({
     className?: string;
   };
   getCellClassName?: (row: Row<TData>, columnId: string) => string | undefined;
+  /** Renders an extra full-width row directly beneath `row` when non-null. */
+  renderRowDetail?: (row: Row<TData>) => ReactNode;
   fixedLayout?: boolean;
   stickyHeader?: boolean;
 }) {
@@ -179,36 +183,48 @@ export function AppDataTable<TData>({
         <tbody>
           {table.getRowModel().rows.map((row) => {
             const rowProps = getRowProps?.(row);
+            const detail = renderRowDetail?.(row);
             return (
-              <tr
-                key={row.id}
-                onClick={rowProps?.onClick}
-                className={[getRowClassName?.(row), rowProps?.className]
-                  .filter(Boolean)
-                  .join(" ")}
-              >
-                {row.getVisibleCells().map((cell) => {
-                  const metaClass = cell.column.columnDef.meta?.cellClassName;
-                  return (
+              <Fragment key={row.id}>
+                <tr
+                  onClick={rowProps?.onClick}
+                  className={[getRowClassName?.(row), rowProps?.className]
+                    .filter(Boolean)
+                    .join(" ")}
+                >
+                  {row.getVisibleCells().map((cell) => {
+                    const metaClass = cell.column.columnDef.meta?.cellClassName;
+                    return (
+                      <td
+                        key={cell.id}
+                        className={[
+                          typeof metaClass === "function"
+                            ? metaClass(row)
+                            : metaClass,
+                          getCellClassName?.(row, cell.column.id),
+                        ]
+                          .filter(Boolean)
+                          .join(" ")}
+                      >
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
+                      </td>
+                    );
+                  })}
+                </tr>
+                {detail ? (
+                  <tr>
                     <td
-                      key={cell.id}
-                      className={[
-                        typeof metaClass === "function"
-                          ? metaClass(row)
-                          : metaClass,
-                        getCellClassName?.(row, cell.column.id),
-                      ]
-                        .filter(Boolean)
-                        .join(" ")}
+                      colSpan={row.getVisibleCells().length}
+                      className="bg-base-200/40 p-0"
                     >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
+                      {detail}
                     </td>
-                  );
-                })}
-              </tr>
+                  </tr>
+                ) : null}
+              </Fragment>
             );
           })}
         </tbody>
