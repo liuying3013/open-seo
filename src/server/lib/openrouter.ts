@@ -4,6 +4,7 @@ import {
   type LanguageModelV3,
 } from "@openrouter/ai-sdk-provider";
 import {
+  getEnvValueSync,
   getOptionalEnvValue,
   getRequiredEnvValue,
 } from "@/server/lib/runtime-env";
@@ -67,6 +68,27 @@ export function buildChatAgentModel(
     usage: { include: true },
     extraBody: { reasoning: { effort: reasoningEffort } },
   });
+}
+
+/**
+ * SAM's model, read from its Durable Object env. Sync because Think's
+ * `getModel()` hook is sync; same key/model/relay settings as
+ * getStructuredLlmModel.
+ */
+export function buildChatAgentModelFromEnv(
+  env: object,
+  reasoningEffort: "max" | "low",
+): LanguageModelV3 {
+  const apiKey = getEnvValueSync(env, "OPENROUTER_API_KEY");
+  if (!apiKey) {
+    throw new Error("OPENROUTER_API_KEY is required for the SAM agent");
+  }
+  return buildChatAgentModel(
+    apiKey,
+    getEnvValueSync(env, "OPENROUTER_MODEL"),
+    reasoningEffort,
+    getEnvValueSync(env, "OPENROUTER_BASE_URL"),
+  );
 }
 
 /**
