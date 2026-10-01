@@ -11,7 +11,8 @@ import {
 } from "drizzle-orm/pg-core";
 import { projects } from "./app.schema";
 import { candidateKeywords } from "./candidate-keywords.schema";
-import { PAGE_ACTIONS } from "../../shared/pagePublishing";
+import { sitePages } from "./site-pages.schema";
+import { PAGE_ACTIONS } from "../../shared/pagePlans";
 
 // Timestamps are stored as *text* (same column shape as the SQLite schema); see
 // the note in pg/app.schema.ts. `isoNow` matches `new Date().toISOString()` so
@@ -100,6 +101,14 @@ export const clusters = pgTable(
     // JSON of weighted subscores including the agent-supplied judgment inputs,
     // kept so scores stay inspectable and re-runnable as rules evolve.
     businessValueBreakdown: text("business_value_breakdown"),
+    // The page this cluster is meant to land on. target_url is the proposed
+    // address of a page that does not exist yet.
+    targetPageId: text("target_page_id").references(() => sitePages.id, {
+      onDelete: "set null",
+    }),
+    targetUrl: text("target_url"),
+    plannedAction: text("planned_action", { enum: PAGE_ACTIONS }),
+    actionReason: text("action_reason"),
     scoredAt: text("scored_at"),
     // Scoring constants version (see content-ops rules module) used at scoredAt.
     ruleVersion: text("rule_version"),
@@ -377,7 +386,9 @@ export const contentAssets = pgTable(
     language: text("language"),
     pageAction: text("page_action", { enum: PAGE_ACTIONS }),
     // Plain column until the site_pages table lands; the FK is added then.
-    sitePageId: text("site_page_id"),
+    sitePageId: text("site_page_id").references(() => sitePages.id, {
+      onDelete: "set null",
+    }),
     // Latest content_asset_versions.version; 0 = no version submitted yet.
     currentVersion: integer("current_version").notNull().default(0),
     createdAt: text("created_at").notNull().default(isoNow),

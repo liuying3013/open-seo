@@ -3,6 +3,7 @@ import { ContentOpsError } from "@/server/features/content-ops/contentOpsErrors"
 import { AssetsRepository } from "@/server/features/content-ops/repositories/AssetsRepository";
 import { EvidencePacksRepository } from "@/server/features/content-ops/repositories/EvidencePacksRepository";
 import { assertAssetTransition } from "@/server/features/content-ops/stateMachine";
+import { SitePagesRepository } from "@/server/features/page-plans/repositories/SitePagesRepository";
 import { runContentChecks, type ContentDraft } from "../rules/contentChecks";
 import { VersionsRepository } from "../repositories/VersionsRepository";
 import type { VERSION_FILE_CHANGES } from "@/shared/pagePublishing";
@@ -72,8 +73,7 @@ async function submit(input: SubmitVersionInput) {
 
   const checks = runContentChecks(input.draft, {
     prohibitedClaims: await prohibitedClaimsFor(asset.clusterId),
-    // Extension point: pass the site's page URLs here once site_pages exists.
-    knownPageUrls: null,
+    knownPageUrls: await knownPageLinks(asset.projectId),
   });
   const version = asset.currentVersion + 1;
   try {
@@ -104,6 +104,24 @@ async function submit(input: SubmitVersionInput) {
     }
     throw error;
   }
+}
+
+// Drafts link with site-relative paths ("/flexible-stone") or full URLs, with
+// or without a trailing slash; site_pages stores normalized absolute URLs.
+// Accept every spelling of each live page. No inventory yet -> null, which
+// the check reports as "unchecked" rather than failing every link.
+async function knownPageLinks(projectId: string) {
+  const pages = await SitePagesRepository.listAllUrls(projectId);
+  if (pages.length === 0) return null;
+  const forms = new Set<string>();
+  for (const { url } of pages) {
+    const path = new URL(url).pathname.replace(/\/$/, "") || "/";
+    for (const form of [url, path]) {
+      forms.add(form);
+      forms.add(form.endsWith("/") ? form : `${form}/`);
+    }
+  }
+  return forms;
 }
 
 export const ContentVersionService = { submit };

@@ -1,14 +1,5 @@
 // Vocabulary shared by the page-publishing schemas, services and MCP tools.
 
-export const PAGE_ACTIONS = [
-  "new",
-  "update",
-  "add_section",
-  "merge",
-  "watch",
-  "exclude",
-] as const;
-
 export const VERSION_FILE_CHANGES = ["added", "modified", "deleted"] as const;
 export const VERSION_AUTHORS = ["agent", "user"] as const;
 export const APPROVAL_DECISIONS = ["approved", "rejected"] as const;

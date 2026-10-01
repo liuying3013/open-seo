@@ -14,6 +14,8 @@ import * as sqlitePagePublishing from "./page-publishing.schema";
 import * as sqliteOpportunityIntel from "./opportunity-intel.schema";
 import * as sqliteProjectContext from "./project-context.schema";
 import * as sqliteProjectSites from "./project-sites.schema";
+import * as sqliteSitePages from "./site-pages.schema";
+import * as sqlitePagePlans from "./page-plans.schema";
 import * as sqliteReports from "./reports.schema";
 import * as sqliteReportTemplates from "./report-templates.schema";
 import * as sqliteAudit from "./audit.schema";
@@ -32,6 +34,8 @@ import * as pgPagePublishing from "./pg/page-publishing.schema";
 import * as pgOpportunityIntel from "./pg/opportunity-intel.schema";
 import * as pgProjectContext from "./pg/project-context.schema";
 import * as pgProjectSites from "./pg/project-sites.schema";
+import * as pgSitePages from "./pg/site-pages.schema";
+import * as pgPagePlans from "./pg/page-plans.schema";
 import * as pgReports from "./pg/reports.schema";
 import * as pgReportTemplates from "./pg/report-templates.schema";
 import * as pgAudit from "./pg/audit.schema";
@@ -172,6 +176,8 @@ const sqliteAppTables = tablesFrom(
   sqliteOpportunityIntel,
   sqliteProjectContext,
   sqliteProjectSites,
+  sqliteSitePages,
+  sqlitePagePlans,
   sqliteReports,
   sqliteReportTemplates,
   sqliteAudit,
@@ -191,6 +197,8 @@ const pgAppTables = tablesFrom(
   pgOpportunityIntel,
   pgProjectContext,
   pgProjectSites,
+  pgSitePages,
+  pgPagePlans,
   pgReports,
   pgReportTemplates,
   pgAudit,

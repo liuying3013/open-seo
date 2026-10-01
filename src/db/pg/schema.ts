@@ -7,6 +7,8 @@ export * from "./page-publishing.schema";
 export * from "./opportunity-intel.schema";
 export * from "./project-context.schema";
 export * from "./project-sites.schema";
+export * from "./site-pages.schema";
+export * from "./page-plans.schema";
 export * from "./reports.schema";
 export * from "./report-templates.schema";
 export * from "./audit.schema";

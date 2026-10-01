@@ -52,6 +52,7 @@ beforeEach(async () => {
     "content_asset_versions",
     "content_assets",
     "clusters",
+    "site_pages",
     "project_sites",
     "projects",
   ]) {
@@ -174,6 +175,19 @@ describe("versions and approvals", () => {
       "SESSION_REQUIRED",
     );
     expect(await assetStatus()).toBe("qa_review");
+  });
+
+  it("checks internal links against the site page inventory in any spelling", async () => {
+    await db.run(
+      `INSERT INTO site_pages (id, project_id, url, path) VALUES ('page-1', '${project}', 'https://example.com/widgets', '/widgets')`,
+    );
+    const { checks } = await submit({
+      body: "## Start here\n\nSee [widgets](/widgets/) and [old](/retired).",
+    });
+    const links = checks.checks.find((check) => check.id === "internal_links");
+    expect(links?.level).toBe("warning");
+    expect(links?.message).toContain("/retired");
+    expect(links?.message).not.toContain("/widgets");
   });
 
   it("returns a rejected work order to drafted with the comment on record", async () => {
