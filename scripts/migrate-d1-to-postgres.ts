@@ -46,6 +46,10 @@
  *   pnpm exec tsx scripts/migrate-d1-to-postgres.ts [flags]
  *
  *   --dry-run         Report D1 row counts only; write nothing.
+ *   --sqlite-file PATH Read a local SQLite backup instead of Cloudflare D1.
+ *                     Opened read-only in a consistent read transaction.
+ *   --allow-unmapped-tables  Allow local tables outside the current app schema;
+ *                           migrate/archive these separately before cutover.
  *   --allow-nonempty  Proceed even if the target already has rows (default: abort).
  *   --page-size N     Rows per D1 API page (default 5000).
  *   --update          Delta/catch-up sync: only rows changed within the window
@@ -58,6 +62,7 @@
  */
 import { readFileSync } from "node:fs";
 import process from "node:process";
+import type { DatabaseSync } from "node:sqlite";
 import {
   getTableColumns,
   getTableName,
@@ -81,6 +86,8 @@ import * as pgSchema from "../src/db/pg/schema";
 loadLocalEnv();
 
 const args = parseArgs(process.argv.slice(2));
+const sqliteFile = args["sqlite-file"];
+let localDatabase: DatabaseSync | undefined;
 const dryRun = args["dry-run"] === "true";
 const allowNonEmpty = args["allow-nonempty"] === "true";
 const pageSize = Number(args["page-size"]) || 5000;
@@ -118,6 +125,9 @@ async function d1Query<T = Record<string, unknown>>(
   databaseId: string,
   statement: string,
 ): Promise<T[]> {
+  if (localDatabase) {
+    return localDatabase.prepare(statement).all() as T[];
+  }
   const response = await fetch(
     `https://api.cloudflare.com/client/v4/accounts/${accountId}/d1/database/${databaseId}/query`,
     {
@@ -373,7 +383,7 @@ async function copyTable(
 }
 
 async function main() {
-  if (!accountId || !apiToken) {
+  if (!sqliteFile && (!accountId || !apiToken)) {
     throw new Error(
       "CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN are required.",
     );
@@ -381,10 +391,38 @@ async function main() {
   if (!dryRun && !connectionString) {
     throw new Error("POSTGRES_DATABASE_URL is required.");
   }
-  const databaseId = resolveDatabaseId();
+  if (sqliteFile === "true") {
+    throw new Error("--sqlite-file requires a path to a SQLite backup.");
+  }
+  if (sqliteFile) {
+    const { DatabaseSync } = await import("node:sqlite");
+    localDatabase = new DatabaseSync(sqliteFile, { readOnly: true });
+    localDatabase.exec("BEGIN");
+  }
+  const databaseId = sqliteFile ?? resolveDatabaseId();
 
   const sqliteTables = tablesByName([sqliteSchema]);
   const pgTables = tablesByName([pgSchema]);
+  if (localDatabase) {
+    const unmapped = localDatabase
+      .prepare("SELECT name FROM sqlite_master WHERE type = 'table'")
+      .all()
+      .map((row) => String(row.name))
+      .filter(
+        (name) =>
+          !sqliteTables.has(name) &&
+          !["_cf_METADATA", "d1_migrations", "sqlite_sequence"].includes(name),
+      );
+    if (unmapped.length) {
+      const message = `Local tables outside the current app schema: ${unmapped.join(", ")}.`;
+      if (args["allow-unmapped-tables"] !== "true") {
+        throw new Error(
+          `${message} Plan a separate migration/archive, then pass --allow-unmapped-tables.`,
+        );
+      }
+      console.warn(`${message} These must be migrated/archived separately.`);
+    }
+  }
   const order = fkSafeOrder(sqliteTables);
   const cutoffIso = new Date(Date.now() - sinceHours * 3_600_000).toISOString();
 
@@ -495,7 +533,9 @@ async function main() {
   if (mismatches > 0) process.exitCode = 1;
 }
 
-main().catch((error) => {
-  console.error(error);
-  process.exit(1);
-});
+main()
+  .finally(() => localDatabase?.close())
+  .catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });

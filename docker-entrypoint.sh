@@ -13,7 +13,15 @@ echo 'OpenSEO sends an anonymous usage heartbeat (counts only). Disable: OPENSEO
 # in seconds with the exact fix instead of after a multi-minute build.
 pnpm exec tsx scripts/selfhost-preflight.ts
 
-pnpm run db:migrate:local
+case "${DATABASE_PROVIDER:-d1}" in
+  d1) pnpm run db:migrate:local ;;
+  postgres)
+    : "${POSTGRES_DATABASE_URL:?Set POSTGRES_DATABASE_URL for Postgres migrations}"
+    : "${CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE:?Set the local Hyperdrive connection string for Postgres runtime access}"
+    pnpm run db:migrate:pg
+    ;;
+  *) echo "Unsupported DATABASE_PROVIDER: $DATABASE_PROVIDER" >&2; exit 1 ;;
+esac
 
 # POSTHOG_SOURCEMAPS (CI sourcemap uploads) moves vite's outDir; keep the
 # fingerprint marker beside the output it describes.
@@ -21,8 +29,8 @@ if [ "${POSTHOG_SOURCEMAPS:-}" = "true" ]; then OUT_DIR=dist-sourcemaps; else OU
 FP_FILE="$OUT_DIR/.openseo-build-env"
 
 # Everything that changes build output: the envPrefix prefixes from
-# vite.config.ts (keep in sync) plus POSTHOG_SOURCEMAPS.
-FINGERPRINT="$(env | grep -E '^(VITE_|AUTH_MODE|BYPASS_EMAIL_VERIFICATION|POSTHOG_PUBLIC_KEY|POSTHOG_HOST|TURNSTILE_SITE_KEY|POSTHOG_SOURCEMAPS)' | sort | sha256sum | cut -d' ' -f1)"
+# vite.config.ts (keep in sync), sourcemaps, and local Postgres bindings.
+FINGERPRINT="$(env | grep -E '^(VITE_|AUTH_MODE|BYPASS_EMAIL_VERIFICATION|POSTHOG_PUBLIC_KEY|POSTHOG_HOST|TURNSTILE_SITE_KEY|POSTHOG_SOURCEMAPS|DATABASE_PROVIDER|CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE)' | sort | sha256sum | cut -d' ' -f1)"
 # A missing sha256sum would yield an empty, always-matching fingerprint and
 # silently disable rebuilds — fail loudly instead.
 test -n "$FINGERPRINT"

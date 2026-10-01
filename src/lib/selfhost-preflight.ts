@@ -78,6 +78,31 @@ function checkAuthMode(env: EnvRecord, items: PreflightItem[]): void {
     return;
   }
 
+  if (mode === "local_password") {
+    const secret = get(env, "BETTER_AUTH_SECRET");
+    let validUrl = false;
+    try {
+      const url = new URL(get(env, "BETTER_AUTH_URL") ?? "");
+      validUrl =
+        url.protocol === "https:" ||
+        (url.protocol === "http:" && url.hostname === "localhost");
+    } catch {
+      /* Report configuration requirements below. */
+    }
+    const valid =
+      validUrl &&
+      Boolean(secret && secret.length >= MIN_BETTER_AUTH_SECRET_LENGTH);
+    items.push({
+      key: "auth",
+      name: "AUTH_MODE",
+      level: valid ? "ok" : "fail",
+      message: valid
+        ? "local_password — email/password login; public registration is disabled."
+        : "local_password requires BETTER_AUTH_URL (https or http://localhost) and BETTER_AUTH_SECRET (32+ characters).",
+    });
+    return;
+  }
+
   // cloudflare_access (explicit or defaulted)
   const teamDomain = get(env, "TEAM_DOMAIN");
   const policyAud = get(env, "POLICY_AUD");

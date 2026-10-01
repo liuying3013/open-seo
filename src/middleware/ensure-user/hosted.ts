@@ -1,4 +1,6 @@
-import { getAuth, hasHostedAuthConfig } from "@/lib/auth";
+import { env } from "cloudflare:workers";
+import { getAuth, hasPasswordAuthConfig } from "@/lib/auth";
+import { getAuthMode } from "@/lib/auth-mode";
 import { getActiveOrganizationId } from "@/lib/auth-session";
 import { AuthRepository } from "@/server/auth/repositories/AuthRepository";
 import { resolveActiveHostedOrganization } from "@/server/auth/default-hosted-organization";
@@ -6,10 +8,10 @@ import { AppError } from "@/server/lib/errors";
 import type { EnsuredUserContext } from "./types";
 
 async function requireHostedSession(headers: Headers) {
-  if (!hasHostedAuthConfig()) {
+  if (!hasPasswordAuthConfig()) {
     throw new AppError(
       "AUTH_CONFIG_MISSING",
-      "Missing Better Auth hosted configuration",
+      "Missing password authentication configuration",
     );
   }
 
@@ -51,10 +53,17 @@ export async function resolveHostedContext(
   // No active org, or a stale one: re-resolve from live memberships (creating
   // a default workspace only when the user has none) and repoint the session.
   const authApi = getAuth().api;
-  const resolved = await resolveActiveHostedOrganization(
-    session.user.id,
-    (body) => authApi.createOrganization({ body }),
-  );
+  const resolved =
+    getAuthMode(env.AUTH_MODE) === "local_password"
+      ? await AuthRepository.findNewestMembershipForUser(session.user.id)
+      : await resolveActiveHostedOrganization(session.user.id, (body) =>
+          authApi.createOrganization({ body }),
+        );
+  if (!resolved)
+    throw new AppError(
+      "FORBIDDEN",
+      "No workspace access is configured for this account.",
+    );
 
   await authApi.setActiveOrganization({
     headers,

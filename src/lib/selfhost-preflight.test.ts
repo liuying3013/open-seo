@@ -9,6 +9,31 @@ function itemFor(
 }
 
 describe("runSelfhostPreflight", () => {
+  it("accepts local password auth without Google or email-provider credentials", () => {
+    expect(
+      runSelfhostPreflight({
+        AUTH_MODE: "local_password",
+        BETTER_AUTH_URL: "http://localhost:3001",
+        BETTER_AUTH_SECRET: "x".repeat(32),
+      }).failed,
+    ).toBe(false);
+  });
+
+  it.each([
+    {},
+    { BETTER_AUTH_URL: "http://localhost:3001", BETTER_AUTH_SECRET: "short" },
+    {
+      BETTER_AUTH_URL: "http://example.com",
+      BETTER_AUTH_SECRET: "x".repeat(32),
+    },
+  ])(
+    "rejects incomplete or insecure local password configuration",
+    (config) => {
+      expect(
+        runSelfhostPreflight({ AUTH_MODE: "local_password", ...config }).failed,
+      ).toBe(true);
+    },
+  );
   it("passes the stock Docker setup (local_noauth + DataForSEO key)", () => {
     const result = runSelfhostPreflight({
       AUTH_MODE: "local_noauth",

@@ -1,5 +1,10 @@
 import { useForm } from "@tanstack/react-form";
-import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
+import {
+  Link,
+  createFileRoute,
+  redirect,
+  useNavigate,
+} from "@tanstack/react-router";
 import { useState } from "react";
 import {
   AuthPageCard,
@@ -15,6 +20,7 @@ import {
 import { getFieldError, getFormError } from "@/client/lib/forms";
 import { captureClientEvent } from "@/client/lib/posthog";
 import { authClient } from "@/lib/auth-client";
+import { getAuthMode } from "@/lib/auth-mode";
 import { getSignInSearch, getVerifyEmailSearch } from "@/lib/auth-redirect";
 import {
   HOSTED_PASSWORD_MAX_LENGTH,
@@ -45,6 +51,10 @@ const signUpSchema = z
 
 export const Route = createFileRoute("/_auth/sign-up")({
   validateSearch: authRedirectSearchSchema,
+  beforeLoad: () => {
+    if (getAuthMode(import.meta.env.AUTH_MODE) === "local_password")
+      throw redirect({ to: "/sign-in" });
+  },
   component: SignUpPage,
 });
 

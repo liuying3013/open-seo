@@ -10,6 +10,7 @@ import {
 import { getFieldError, getFormError } from "@/client/lib/forms";
 import { captureClientEvent } from "@/client/lib/posthog";
 import { authClient } from "@/lib/auth-client";
+import { isPasswordClientAuthMode } from "@/lib/auth-mode";
 import { getSignInSearch, getVerifyEmailSearch } from "@/lib/auth-redirect";
 import { z } from "zod";
 
@@ -29,8 +30,11 @@ function SignInPage() {
   const { redirectTo, oauthQuery, isHostedMode } = useAuthPageState(
     search.redirect,
   );
+  const passwordEnabled = isPasswordClientAuthMode();
   const authCallbackURL = redirectTo;
-  const [showEmailForm, setShowEmailForm] = useState(false);
+  const [showEmailForm, setShowEmailForm] = useState(
+    passwordEnabled && !isHostedMode,
+  );
   const [isStartingGoogle, setIsStartingGoogle] = useState(false);
   const [socialError, setSocialError] = useState<string | null>(null);
 
@@ -155,7 +159,7 @@ function SignInPage() {
         <>
           <AuthMethodChooser
             googleLabel="Continue with Google"
-            disabled={!isHostedMode}
+            disabled={!passwordEnabled}
             isBusy={isStartingGoogle}
             onContinueWithGoogle={() => {
               void handleContinueWithGoogle();
@@ -190,7 +194,7 @@ function SignInPage() {
                     value={field.state.value}
                     onChange={(event) => field.handleChange(event.target.value)}
                     autoComplete="email"
-                    disabled={!isHostedMode}
+                    disabled={!passwordEnabled}
                     required
                   />
                   {error ? (
@@ -214,7 +218,7 @@ function SignInPage() {
                     value={field.state.value}
                     onChange={(event) => field.handleChange(event.target.value)}
                     autoComplete="current-password"
-                    disabled={!isHostedMode}
+                    disabled={!passwordEnabled}
                     required
                   />
                   {error ? (
@@ -240,7 +244,7 @@ function SignInPage() {
                   ) : null}
                   <button
                     className="btn btn-soft w-full"
-                    disabled={!isHostedMode || isSubmitting}
+                    disabled={!passwordEnabled || isSubmitting}
                   >
                     {isSubmitting ? "Signing in..." : "Sign in"}
                   </button>

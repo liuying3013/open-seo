@@ -5,7 +5,7 @@ import {
   authRedirectSearchSchema,
 } from "@/client/features/auth/AuthPage";
 import { useSession } from "@/lib/auth-client";
-import { isHostedClientAuthMode } from "@/lib/auth-mode";
+import { isPasswordClientAuthMode } from "@/lib/auth-mode";
 import { getCurrentAuthRedirect, isDocumentRoute } from "@/lib/auth-redirect";
 
 export const Route = createFileRoute("/_auth")({
@@ -17,7 +17,7 @@ function AuthPageLayout() {
   const search = Route.useSearch();
   const navigate = useNavigate();
   const { data: session, isPending } = useSession();
-  const isHostedMode = isHostedClientAuthMode();
+  const isHostedMode = isPasswordClientAuthMode();
   const redirectTo = getCurrentAuthRedirect(search.redirect);
 
   useEffect(() => {

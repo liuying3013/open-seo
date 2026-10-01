@@ -325,7 +325,10 @@ export async function maybeSendSelfHostHeartbeat(
       : undefined;
 
     await dependencies.sendHeartbeat(state.installId, {
-      deployTarget: authMode === "local_noauth" ? "docker" : "cloudflare",
+      deployTarget:
+        authMode === "local_noauth" || authMode === "local_password"
+          ? "docker"
+          : "cloudflare",
       dbBackend: dependencies.getDbBackend(),
       version: dependencies.version,
       ...(prevVersion ? { prevVersion } : {}),

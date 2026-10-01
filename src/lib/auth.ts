@@ -11,7 +11,11 @@ import { pgDb } from "@/db/pg/client";
 import * as pgSchema from "@/db/pg/schema";
 import { getDatabaseProvider } from "@/db/provider";
 import { z } from "zod";
-import { isHostedAuthMode } from "@/lib/auth-mode";
+import {
+  getAuthMode,
+  isHostedAuthMode,
+  isPasswordAuthMode,
+} from "@/lib/auth-mode";
 import { createApiKeyPlugin } from "@/lib/auth-api-key";
 import { createBaseAuthConfig } from "@/lib/auth-config";
 import {
@@ -40,13 +44,14 @@ const hostedBaseUrlSchema = z
   }, "BETTER_AUTH_URL must use https or localhost");
 
 function createAuth() {
-  // Hosted needs the real configured URL (cookies, callbacks, /api/auth routes
-  // all use it). Self-hosted only builds this instance to mint/refresh Search
-  // Console tokens, which never read baseURL — so a placeholder is fine there.
-  const baseUrl = isHostedAuthMode(env.AUTH_MODE)
+  const localPassword = getAuthMode(env.AUTH_MODE) === "local_password";
+  // Password modes need the configured origin for cookies and auth routes.
+  // Delegated modes only use this instance for Search Console token handling.
+  const baseUrl = isPasswordAuthMode(env.AUTH_MODE)
     ? getHostedBaseUrl()
     : "http://localhost";
-  const bypassEmail = Reflect.get(env, "BYPASS_EMAIL_VERIFICATION") === "true";
+  const bypassEmail =
+    localPassword || Reflect.get(env, "BYPASS_EMAIL_VERIFICATION") === "true";
   const baseAuthConfig = createBaseAuthConfig(
     isHostedAuthMode(env.AUTH_MODE)
       ? {
@@ -159,8 +164,24 @@ function createAuth() {
       },
     },
     ...baseAuthConfig,
+    session: {
+      ...baseAuthConfig.session,
+      // Local PG/D1 is nearby; consult the session store on every request so
+      // sign-out and revocation take effect immediately.
+      cookieCache: {
+        ...baseAuthConfig.session.cookieCache,
+        enabled: !localPassword,
+      },
+    },
+    rateLimit: localPassword
+      ? {
+          enabled: true,
+          customRules: { "/sign-in/email": { window: 60, max: 10 } },
+        }
+      : undefined,
     emailAndPassword: {
       ...baseAuthConfig.emailAndPassword,
+      disableSignUp: localPassword,
       requireEmailVerification: !bypassEmail,
       resetPasswordTokenExpiresIn: 60 * 60,
       revokeSessionsOnPasswordReset: true,
@@ -236,6 +257,24 @@ function createAuth() {
       session: {
         create: {
           before: async (session) => {
+            if (localPassword) {
+              const membership =
+                await AuthRepository.findNewestMembershipForUser(
+                  session.userId,
+                );
+              if (!membership) {
+                throw new APIError("FORBIDDEN", {
+                  message:
+                    "No workspace access is configured for this account.",
+                });
+              }
+              return {
+                data: {
+                  ...session,
+                  activeOrganizationId: membership.organizationId,
+                },
+              };
+            }
             // Runs on every sign-in (each sign-in mints a session row).
             // Resolution order: last-active org while still a member → most
             // recently joined org → newly created default organization —
@@ -387,6 +426,18 @@ export function hasHostedAuthConfig() {
       (Reflect.get(env, "BYPASS_EMAIL_VERIFICATION") === "true" ||
         hasHostedAuthEmailConfig())
     );
+  } catch {
+    return false;
+  }
+}
+
+export function hasPasswordAuthConfig() {
+  if (getAuthMode(env.AUTH_MODE) !== "local_password")
+    return hasHostedAuthConfig();
+  try {
+    getHostedBaseUrl();
+    getHostedSecret();
+    return true;
   } catch {
     return false;
   }

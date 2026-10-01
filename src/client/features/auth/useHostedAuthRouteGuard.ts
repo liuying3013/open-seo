@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { useSession } from "@/lib/auth-client";
 import {
   isEmailVerificationBypassed,
-  isHostedClientAuthMode,
+  isPasswordClientAuthMode,
 } from "@/lib/auth-mode";
 import {
   getCurrentAuthRedirectFromHref,
@@ -14,7 +14,7 @@ import {
 export function useHostedAuthRouteGuard() {
   const navigate = useNavigate();
   const { data: session, isPending } = useSession();
-  const isHostedMode = isHostedClientAuthMode();
+  const isHostedMode = isPasswordClientAuthMode();
   const emailVerified =
     session?.user?.emailVerified === true || isEmailVerificationBypassed();
 
