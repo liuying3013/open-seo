@@ -73,7 +73,8 @@ export function MetaPanel({ detail }: { detail: ReviewDetail }) {
   const { asset, version } = detail;
   const draft = version?.draft;
   const rows: [string, string | null | undefined][] = [
-    ["标题", draft?.title],
+    ["标题（H1）", draft?.title],
+    ["搜索结果标题", draft && (draft.seoTitle || "与标题相同")],
     ["描述", draft?.metaDescription],
     ["Slug", draft?.slug],
     ["目标地址", asset.targetUrl],

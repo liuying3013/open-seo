@@ -41,6 +41,16 @@ describe("runContentChecks", () => {
     expect(report.blocking).toBe(0);
   });
 
+  it("measures the search result title when the draft has one", () => {
+    const report = runContentChecks(
+      draft({
+        title: "Short H1",
+        seoTitle: "A search result title of fair length",
+      }),
+    );
+    expect(level(report, "title_length")).toBe("pass");
+  });
+
   it("blocks prohibited claims, a second H1 and unsupported structured data", () => {
     const report = runContentChecks(
       draft({

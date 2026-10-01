@@ -69,7 +69,9 @@ export function PagePreview({
             <div className="break-all text-xs text-success">
               {targetUrl ?? "（未设置目标地址）"}
             </div>
-            <div className="text-lg text-info">{draft.title}</div>
+            <div className="text-lg text-info">
+              {draft.seoTitle || draft.title}
+            </div>
             <p className="text-sm text-base-content/70">
               {draft.metaDescription}
             </p>

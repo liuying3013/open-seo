@@ -6,6 +6,9 @@ import { z } from "zod";
 
 export const contentDraftSchema = z.object({
   title: z.string(),
+  // The <title> shown in search results, for sites that keep it apart from
+  // the H1. Without it the site derives <title> from `title`.
+  seoTitle: z.string().optional(),
   metaDescription: z.string(),
   slug: z.string(),
   // Markdown. The page title is rendered as the H1 by the site template.
@@ -281,7 +284,12 @@ export function runContentChecks(
       ? { id: "body", level: "blocking", message: "正文为空。" }
       : { id: "body", level: "pass", message: "正文有内容。" };
   const checks = [
-    lengthCheck("title_length", "标题", draft.title, TITLE_RANGE),
+    lengthCheck(
+      "title_length",
+      draft.seoTitle ? "搜索结果标题" : "标题",
+      draft.seoTitle || draft.title,
+      TITLE_RANGE,
+    ),
     lengthCheck(
       "description_length",
       "元描述",
