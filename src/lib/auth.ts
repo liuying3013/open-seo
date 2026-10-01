@@ -217,7 +217,7 @@ function createAuth() {
     database,
     plugins: [
       ...baseAuthConfig.plugins,
-      ...(isHostedAuthMode(env.AUTH_MODE) ? [createApiKeyPlugin()] : []),
+      ...(isPasswordAuthMode(env.AUTH_MODE) ? [createApiKeyPlugin()] : []),
       ...(turnstileSecretKey
         ? [
             captcha({

@@ -5,7 +5,10 @@ import { toast } from "sonner";
 import { ApiKeySettings } from "@/client/features/settings/ApiKeySettings";
 import { type ThemePreference, useThemePreference } from "@/client/lib/theme";
 import { authClient, useSession } from "@/lib/auth-client";
-import { isHostedClientAuthMode } from "@/lib/auth-mode";
+import {
+  isHostedClientAuthMode,
+  isPasswordClientAuthMode,
+} from "@/lib/auth-mode";
 import { version } from "../../../../package.json";
 
 export const Route = createFileRoute("/_app/settings/")({
@@ -85,10 +88,10 @@ function PersonalSettings() {
         </div>
       </section>
 
+      {isPasswordClientAuthMode() ? <ApiKeySettings /> : null}
+
       {isHosted ? (
         <>
-          <ApiKeySettings />
-
           <section className="space-y-3">
             <h2 className="text-sm font-medium text-base-content/50">
               Analytics

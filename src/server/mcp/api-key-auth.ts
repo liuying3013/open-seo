@@ -7,23 +7,29 @@ import { recordMcpAuthorized } from "@/server/features/activation/mcpActivation"
 import { createWorkersOAuthMcpProps, MCP_ROUTE } from "@/server/mcp/context";
 import { handleAuthenticatedOpenSeoMcpRequest } from "@/server/mcp/transport";
 
-function getApiKey(request: Request) {
-  // Both branches require the oseo_ prefix: anything else (a Cloudflare OAuth
-  // access token, a stray foreign x-api-key header) falls through to the
-  // OAuth provider instead of being consumed here.
+// Hosted requires the oseo_ prefix on both branches: anything else (a
+// Cloudflare OAuth access token, a stray foreign x-api-key header) falls
+// through to the OAuth provider instead of being consumed here. local_password
+// has no OAuth fallthrough, so it takes any credential and lets verification
+// reject it.
+function getApiKey(request: Request, requirePrefix: boolean) {
+  const accepts = (value: string | null | undefined) =>
+    value && (!requirePrefix || value.startsWith(API_KEY_PREFIX));
+
   const headerKey = request.headers.get("x-api-key");
-  if (headerKey?.startsWith(API_KEY_PREFIX)) return headerKey;
+  if (accepts(headerKey)) return headerKey ?? null;
 
   const bearerToken = request.headers
     .get("Authorization")
     ?.replace(/^Bearer /i, "");
-  if (bearerToken?.startsWith(API_KEY_PREFIX)) return bearerToken;
+  if (accepts(bearerToken)) return bearerToken ?? null;
 
   return null;
 }
 
 function apiKeyErrorResponse(
   error: { code?: string | null; message?: unknown; details?: unknown } | null,
+  options: { challenge?: boolean } = {},
 ) {
   const headers = new Headers({ "Content-Type": "application/json" });
 
@@ -63,6 +69,9 @@ function apiKeyErrorResponse(
         : "This API key is no longer associated with an organization"
       : "The provided API key is invalid, expired, or disabled";
   const status = isLimited ? 429 : isForbidden ? 403 : 401;
+  if (status === 401 && options.challenge) {
+    headers.set("WWW-Authenticate", 'Bearer error="invalid_token"');
+  }
 
   // Bad credentials are client-side noise, so 401 logs at debug (mirroring the
   // OAuth path); a 429 means we actually cut a caller off, so warn.
@@ -87,9 +96,34 @@ export async function handleMcpApiKeyRequest(
   const url = new URL(request.url);
   if (url.pathname !== MCP_ROUTE || request.method === "OPTIONS") return null;
 
-  const apiKey = getApiKey(request);
+  const apiKey = getApiKey(request, true);
   if (!apiKey) return null;
 
+  return handleApiKeyMcpRequest(request, apiKey, env, ctx, false);
+}
+
+// local_password /mcp: API key is the only credential (no OAuth provider), so
+// a missing or bad key is a 401 rather than a fallthrough.
+export async function handleLocalPasswordMcpRequest(
+  request: Request,
+  env: unknown,
+  ctx: ExecutionContext,
+): Promise<Response> {
+  const apiKey = getApiKey(request, false);
+  if (!apiKey) {
+    return apiKeyErrorResponse(null, { challenge: true });
+  }
+  return handleApiKeyMcpRequest(request, apiKey, env, ctx, true);
+}
+
+async function handleApiKeyMcpRequest(
+  request: Request,
+  apiKey: string,
+  env: unknown,
+  ctx: ExecutionContext,
+  localPassword: boolean,
+): Promise<Response> {
+  const errorOptions = { challenge: localPassword };
   try {
     // Keep API keys scoped to /mcp: verifyApiKey (rather than Better Auth's
     // enableSessionForAPIKeys mock sessions) means a key never becomes a
@@ -98,7 +132,7 @@ export async function handleMcpApiKeyRequest(
     const result = await authApi.verifyApiKey({ body: { key: apiKey } });
 
     if (!result.valid || !result.key) {
-      return apiKeyErrorResponse(result.error);
+      return apiKeyErrorResponse(result.error, errorOptions);
     }
 
     const userId = result.key.referenceId;
@@ -124,7 +158,7 @@ export async function handleMcpApiKeyRequest(
     }
 
     const user = await AuthRepository.getHostedUser(userId);
-    if (!user?.email) return apiKeyErrorResponse(null);
+    if (!user?.email) return apiKeyErrorResponse(null, errorOptions);
 
     // API keys bill the user's active organization. Keys are user-scoped and
     // the org derives from the project each tool call names (project-level
@@ -154,7 +188,8 @@ export async function handleMcpApiKeyRequest(
       clientId: "api_key",
     });
 
-    await recordMcpAuthorized(organizationId);
+    // Activation milestones feed the hosted onboarding card only.
+    if (!localPassword) await recordMcpAuthorized(organizationId);
 
     return await handleAuthenticatedOpenSeoMcpRequest(request, props, env, ctx);
   } catch (error) {
