@@ -15,6 +15,7 @@ import {
   type WorkbenchOverview,
 } from "./workbenchTypes";
 import { WorkbenchEditor } from "./WorkbenchEditor";
+import { pageActionLabels } from "@/client/features/page-plans/pageLabels";
 
 type Task = { label: string; run: () => Promise<unknown> };
 const tabs = ["研究与决策", "证据与取材", "写作与导出", "操作记录"] as const;
@@ -124,6 +125,26 @@ export function WorkbenchTopicPanel({
         <p className="mt-2 text-xs text-base-content/60">
           {topic.keywords.map((k) => k.keyword).join(" · ")}
         </p>
+        {(topic.cluster.plannedAction ||
+          topic.targetPage ||
+          topic.cluster.targetUrl) && (
+          <p className="mt-2 text-xs">
+            <span className="text-base-content/60">目标页面：</span>
+            {topic.targetPage?.url ?? topic.cluster.targetUrl ?? "未指定"}
+            {topic.cluster.plannedAction && (
+              <>
+                <span className="text-base-content/60"> · 计划动作：</span>
+                {pageActionLabels[topic.cluster.plannedAction]}
+              </>
+            )}
+            {topic.cluster.actionReason && (
+              <span className="text-base-content/60">
+                {" "}
+                （{topic.cluster.actionReason}）
+              </span>
+            )}
+          </p>
+        )}
       </div>
       <div
         role="tablist"

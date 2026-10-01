@@ -17,6 +17,7 @@ import { EvidencePackService } from "@/server/features/content-ops/services/Evid
 import { BriefService } from "@/server/features/content-ops/services/BriefService";
 import { CandidateKeywordsService } from "@/server/features/keywords/services/CandidateKeywordsService";
 import { ProjectRepository } from "@/server/features/projects/repositories/ProjectRepository";
+import { SitePagesRepository } from "@/server/features/page-plans/repositories/SitePagesRepository";
 import { resolveMarket } from "@/shared/keyword-locations";
 import { estimateRankCheckCredits } from "@/shared/rank-tracking";
 import { SERP_DEPTH } from "@/server/features/content-ops/rules/scoringRules";
@@ -46,18 +47,33 @@ async function detail(projectId: string, clusterId: string) {
   const cluster = await ClustersRepository.getById(projectId, clusterId);
   if (!cluster)
     throw new ContentOpsError("CLUSTER_NOT_FOUND", "找不到此项目的选题。");
-  const [keywords, snapshots, decisions, assets, pack, log, pages] =
-    await Promise.all([
-      ClustersRepository.getKeywords(clusterId),
-      SerpRepository.getLatestForCluster(clusterId),
-      DecisionsRepository.listByCluster(clusterId),
-      AssetsRepository.listByCluster(clusterId),
-      EvidencePacksRepository.getLatestForCluster(clusterId),
-      DecisionLogRepository.listByCluster(clusterId, 30),
-      ResearchPagesRepository.getLatestForCluster(clusterId),
-    ]);
+  const [
+    keywords,
+    snapshots,
+    decisions,
+    assets,
+    pack,
+    log,
+    pages,
+    targetPages,
+  ] = await Promise.all([
+    ClustersRepository.getKeywords(clusterId),
+    SerpRepository.getLatestForCluster(clusterId),
+    DecisionsRepository.listByCluster(clusterId),
+    AssetsRepository.listByCluster(clusterId),
+    EvidencePacksRepository.getLatestForCluster(clusterId),
+    DecisionLogRepository.listByCluster(clusterId, 30),
+    ResearchPagesRepository.getLatestForCluster(clusterId),
+    cluster.targetPageId
+      ? SitePagesRepository.getByIds(projectId, [cluster.targetPageId])
+      : [],
+  ]);
+  const targetPage = targetPages[0];
   return {
     cluster,
+    targetPage: targetPage
+      ? { id: targetPage.id, url: targetPage.url, title: targetPage.title }
+      : null,
     keywords,
     snapshots,
     decisions,

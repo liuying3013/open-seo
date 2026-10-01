@@ -148,6 +148,12 @@ import {
   reviewOpportunityTool,
   runOpportunityScanTool,
 } from "@/server/mcp/tools/opportunity-intel";
+import {
+  createPagePlanTool,
+  importSitePagesTool,
+  listSitePagesTool,
+  setClusterTargetsTool,
+} from "@/server/mcp/tools/page-plans";
 import { whoamiTool } from "@/server/mcp/tools/whoami";
 
 type ToolSchema = z.ZodType | z.ZodRawShape;
@@ -321,6 +327,10 @@ export function createOpenSeoMcpServer(authProps: McpProps) {
   register(buildEvidencePackTool);
   register(approveEvidencePackTool);
   register(generateBriefTool);
+  register(importSitePagesTool);
+  register(listSitePagesTool);
+  register(setClusterTargetsTool);
+  register(createPagePlanTool);
   register(readRankingPagesTool);
   register(getContextPackTool);
   register(compareExistingPagesTool);

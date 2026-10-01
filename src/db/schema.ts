@@ -7,6 +7,8 @@ import * as sqliteContentOps from "./content-ops.schema";
 import * as sqliteOpportunityIntel from "./opportunity-intel.schema";
 import * as sqliteProjectContext from "./project-context.schema";
 import * as sqliteProjectSites from "./project-sites.schema";
+import * as sqliteSitePages from "./site-pages.schema";
+import * as sqlitePagePlans from "./page-plans.schema";
 import * as sqliteReports from "./reports.schema";
 import * as sqliteReportTemplates from "./report-templates.schema";
 import * as sqliteAudit from "./audit.schema";
@@ -24,6 +26,8 @@ import * as pgContentOps from "./pg/content-ops.schema";
 import * as pgOpportunityIntel from "./pg/opportunity-intel.schema";
 import * as pgProjectContext from "./pg/project-context.schema";
 import * as pgProjectSites from "./pg/project-sites.schema";
+import * as pgSitePages from "./pg/site-pages.schema";
+import * as pgPagePlans from "./pg/page-plans.schema";
 import * as pgReports from "./pg/reports.schema";
 import * as pgReportTemplates from "./pg/report-templates.schema";
 import * as pgAudit from "./pg/audit.schema";
@@ -52,6 +56,8 @@ type AppSchema = typeof sqliteApp &
   typeof sqliteOpportunityIntel &
   typeof sqliteProjectContext &
   typeof sqliteProjectSites &
+  typeof sqliteSitePages &
+  typeof sqlitePagePlans &
   typeof sqliteReports &
   typeof sqliteReportTemplates &
   typeof sqliteAudit &
@@ -73,6 +79,8 @@ const runtimeSchema =
         ...pgOpportunityIntel,
         ...pgProjectContext,
         ...pgProjectSites,
+        ...pgSitePages,
+        ...pgPagePlans,
         ...pgReports,
         ...pgReportTemplates,
         ...pgAudit,
@@ -92,6 +100,8 @@ const runtimeSchema =
         ...sqliteOpportunityIntel,
         ...sqliteProjectContext,
         ...sqliteProjectSites,
+        ...sqliteSitePages,
+        ...sqlitePagePlans,
         ...sqliteReports,
         ...sqliteReportTemplates,
         ...sqliteAudit,
@@ -155,6 +165,9 @@ export const {
   projectResearchLog,
   projectSites,
   projectMarkets,
+  sitePages,
+  pagePlans,
+  pagePlanItems,
   reports,
   reportTemplates,
   audits,
