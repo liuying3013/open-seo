@@ -6,6 +6,7 @@ export * from "../candidate-keywords.schema";
 export * from "../job-runs.schema";
 export * from "../content-factory.schema";
 export * from "../content-ops.schema";
+export * from "../page-publishing.schema";
 export * from "../opportunity-intel.schema";
 export * from "../project-context.schema";
 export * from "../project-sites.schema";

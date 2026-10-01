@@ -148,6 +148,12 @@ import {
   reviewOpportunityTool,
   runOpportunityScanTool,
 } from "@/server/mcp/tools/opportunity-intel";
+import {
+  listPublishQueueTool,
+  recordPublishAttemptTool,
+  reportSiteChangesTool,
+  submitContentVersionTool,
+} from "@/server/mcp/tools/page-publishing";
 import { whoamiTool } from "@/server/mcp/tools/whoami";
 
 type ToolSchema = z.ZodType | z.ZodRawShape;
@@ -241,6 +247,10 @@ export function createOpenSeoMcpServer(authProps: McpProps) {
   ) => registerOpenSeoTool(server, tool, authProps);
 
   register(whoamiTool);
+  register(submitContentVersionTool);
+  register(listPublishQueueTool);
+  register(recordPublishAttemptTool);
+  register(reportSiteChangesTool);
   register(listProjectsTool);
   register(createProjectTool);
   register(listSitesTool);

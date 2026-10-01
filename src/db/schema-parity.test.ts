@@ -10,6 +10,7 @@ import * as sqliteCandidateKeywords from "./candidate-keywords.schema";
 import * as sqliteJobRuns from "./job-runs.schema";
 import * as sqliteContentFactory from "./content-factory.schema";
 import * as sqliteContentOps from "./content-ops.schema";
+import * as sqlitePagePublishing from "./page-publishing.schema";
 import * as sqliteOpportunityIntel from "./opportunity-intel.schema";
 import * as sqliteProjectContext from "./project-context.schema";
 import * as sqliteProjectSites from "./project-sites.schema";
@@ -27,6 +28,7 @@ import * as pgCandidateKeywords from "./pg/candidate-keywords.schema";
 import * as pgJobRuns from "./pg/job-runs.schema";
 import * as pgContentFactory from "./pg/content-factory.schema";
 import * as pgContentOps from "./pg/content-ops.schema";
+import * as pgPagePublishing from "./pg/page-publishing.schema";
 import * as pgOpportunityIntel from "./pg/opportunity-intel.schema";
 import * as pgProjectContext from "./pg/project-context.schema";
 import * as pgProjectSites from "./pg/project-sites.schema";
@@ -166,6 +168,7 @@ const sqliteAppTables = tablesFrom(
   sqliteJobRuns,
   sqliteContentFactory,
   sqliteContentOps,
+  sqlitePagePublishing,
   sqliteOpportunityIntel,
   sqliteProjectContext,
   sqliteProjectSites,
@@ -184,6 +187,7 @@ const pgAppTables = tablesFrom(
   pgJobRuns,
   pgContentFactory,
   pgContentOps,
+  pgPagePublishing,
   pgOpportunityIntel,
   pgProjectContext,
   pgProjectSites,

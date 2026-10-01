@@ -24,3 +24,16 @@ export async function putTextToR2(
     sizeBytes: Buffer.byteLength(body),
   };
 }
+
+export async function putBytesToR2(
+  key: string,
+  body: Uint8Array,
+  contentType: string,
+): Promise<void> {
+  await env.R2.put(key, body, { httpMetadata: { contentType } });
+}
+
+export async function getBytesFromR2(key: string): Promise<Uint8Array | null> {
+  const object = await env.R2.get(key);
+  return object ? new Uint8Array(await object.arrayBuffer()) : null;
+}

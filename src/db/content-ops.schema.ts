@@ -10,6 +10,7 @@ import {
 import { sql } from "drizzle-orm";
 import { projects } from "./app.schema";
 import { candidateKeywords } from "./candidate-keywords.schema";
+import { PAGE_ACTIONS } from "../shared/pagePublishing";
 
 // ============================================================================
 // Content ops: the SERP deployment decision system (specs/0011-content-ops.md).
@@ -390,6 +391,13 @@ export const contentAssets = sqliteTable(
       .default("planned"),
     publishedUrl: text("published_url"),
     publishedAt: text("published_at"),
+    // Page work order fields (see page-publishing.schema.ts).
+    language: text("language"),
+    pageAction: text("page_action", { enum: PAGE_ACTIONS }),
+    // Plain column until the site_pages table lands; the FK is added then.
+    sitePageId: text("site_page_id"),
+    // Latest content_asset_versions.version; 0 = no version submitted yet.
+    currentVersion: integer("current_version").notNull().default(0),
     createdAt: text("created_at")
       .notNull()
       .default(sql`(current_timestamp)`),

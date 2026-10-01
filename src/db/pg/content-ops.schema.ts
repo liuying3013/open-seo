@@ -11,6 +11,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { projects } from "./app.schema";
 import { candidateKeywords } from "./candidate-keywords.schema";
+import { PAGE_ACTIONS } from "../../shared/pagePublishing";
 
 // Timestamps are stored as *text* (same column shape as the SQLite schema); see
 // the note in pg/app.schema.ts. `isoNow` matches `new Date().toISOString()` so
@@ -372,6 +373,13 @@ export const contentAssets = pgTable(
       .default("planned"),
     publishedUrl: text("published_url"),
     publishedAt: text("published_at"),
+    // Page work order fields (see page-publishing.schema.ts).
+    language: text("language"),
+    pageAction: text("page_action", { enum: PAGE_ACTIONS }),
+    // Plain column until the site_pages table lands; the FK is added then.
+    sitePageId: text("site_page_id"),
+    // Latest content_asset_versions.version; 0 = no version submitted yet.
+    currentVersion: integer("current_version").notNull().default(0),
     createdAt: text("created_at").notNull().default(isoNow),
     updatedAt: text("updated_at").notNull().default(isoNow),
   },

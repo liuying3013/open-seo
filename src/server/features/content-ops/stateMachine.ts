@@ -62,17 +62,22 @@ export type AssetStatus = (typeof ASSET_STATUSES)[number];
 // MVP only exercises planned/brief_ready/rejected; the rest are pre-declared
 // so phase 2 extends data, not the machine.
 const ASSET_TRANSITIONS: Record<AssetStatus, readonly AssetStatus[]> = {
-  planned: ["brief_ready", "rejected"],
+  // A page work order can receive a submitted content version from planned or
+  // brief_ready (qa_review) without passing through the LLM draft step.
+  planned: ["brief_ready", "qa_review", "rejected"],
   // brief_ready -> planned is the redo-the-brief path.
-  brief_ready: ["planned", "drafted", "rejected"],
+  brief_ready: ["planned", "drafted", "qa_review", "rejected"],
   drafted: ["qa_review", "brief_ready", "rejected"],
   qa_review: ["ready_to_publish", "drafted", "rejected"],
-  ready_to_publish: ["published", "qa_review", "rejected"],
-  published: ["indexed", "retired"],
-  indexed: ["ranking", "optimize", "retired"],
-  ranking: ["optimize", "refresh", "retired"],
-  optimize: ["ranking", "refresh", "retired"],
-  refresh: ["ranking", "retired"],
+  // ready_to_publish -> qa_review: approval revoked or fingerprint mismatch.
+  // ready_to_publish -> drafted: rejected after approval.
+  ready_to_publish: ["published", "qa_review", "drafted", "rejected"],
+  // published-family -> drafted: a verified rollback sends the work back.
+  published: ["indexed", "retired", "drafted"],
+  indexed: ["ranking", "optimize", "retired", "drafted"],
+  ranking: ["optimize", "refresh", "retired", "drafted"],
+  optimize: ["ranking", "refresh", "retired", "drafted"],
+  refresh: ["ranking", "retired", "drafted"],
   retired: [],
   rejected: ["planned"],
 };

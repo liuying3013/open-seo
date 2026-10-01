@@ -4,6 +4,7 @@ import * as sqliteCandidateKeywords from "./candidate-keywords.schema";
 import * as sqliteJobRuns from "./job-runs.schema";
 import * as sqliteContentFactory from "./content-factory.schema";
 import * as sqliteContentOps from "./content-ops.schema";
+import * as sqlitePagePublishing from "./page-publishing.schema";
 import * as sqliteOpportunityIntel from "./opportunity-intel.schema";
 import * as sqliteProjectContext from "./project-context.schema";
 import * as sqliteProjectSites from "./project-sites.schema";
@@ -21,6 +22,7 @@ import * as pgCandidateKeywords from "./pg/candidate-keywords.schema";
 import * as pgJobRuns from "./pg/job-runs.schema";
 import * as pgContentFactory from "./pg/content-factory.schema";
 import * as pgContentOps from "./pg/content-ops.schema";
+import * as pgPagePublishing from "./pg/page-publishing.schema";
 import * as pgOpportunityIntel from "./pg/opportunity-intel.schema";
 import * as pgProjectContext from "./pg/project-context.schema";
 import * as pgProjectSites from "./pg/project-sites.schema";
@@ -49,6 +51,7 @@ type AppSchema = typeof sqliteApp &
   typeof sqliteJobRuns &
   typeof sqliteContentFactory &
   typeof sqliteContentOps &
+  typeof sqlitePagePublishing &
   typeof sqliteOpportunityIntel &
   typeof sqliteProjectContext &
   typeof sqliteProjectSites &
@@ -70,6 +73,7 @@ const runtimeSchema =
         ...pgJobRuns,
         ...pgContentFactory,
         ...pgContentOps,
+        ...pgPagePublishing,
         ...pgOpportunityIntel,
         ...pgProjectContext,
         ...pgProjectSites,
@@ -89,6 +93,7 @@ const runtimeSchema =
         ...sqliteJobRuns,
         ...sqliteContentFactory,
         ...sqliteContentOps,
+        ...sqlitePagePublishing,
         ...sqliteOpportunityIntel,
         ...sqliteProjectContext,
         ...sqliteProjectSites,
@@ -124,6 +129,12 @@ export const {
   evidencePacks,
   contentAssets,
   contentBudgets,
+  contentAssetVersions,
+  contentAssetVersionFiles,
+  contentAssetApprovals,
+  contentAssetComments,
+  publishAttempts,
+  siteChangeAlerts,
   researchPages,
   knowledgeEntries,
   knowledgeSources,
