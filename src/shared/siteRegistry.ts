@@ -47,3 +47,15 @@ export function normalizeSiteDomain(input: string): string | null {
   const isHost = /^[a-z\d]([a-z\d-]*[a-z\d])?(\.[a-z\d]([a-z\d-]*[a-z\d])?)+$/;
   return isHost.test(host) ? host : null;
 }
+
+/**
+ * Plausible column of the sites overview: no site mapped, a site mapped but no
+ * API key on the server to read it, or fully connected.
+ */
+export function plausibleStatus(
+  plausibleSite: string | null | undefined,
+  apiKeyConfigured: boolean,
+): "not_configured" | "unconnected" | "connected" {
+  if (!plausibleSite) return "not_configured";
+  return apiKeyConfigured ? "connected" : "unconnected";
+}

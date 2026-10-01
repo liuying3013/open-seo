@@ -7,8 +7,9 @@ import {
   type ProjectSiteRow,
 } from "@/server/features/site-registry/repositories/SiteRegistryRepository";
 import { AppError } from "@/server/lib/errors";
+import { getPlausibleConfig } from "@/server/lib/plausible";
 import { assertLanguageForLocation } from "@/server/lib/market";
-import { normalizeSiteDomain } from "@/shared/siteRegistry";
+import { normalizeSiteDomain, plausibleStatus } from "@/shared/siteRegistry";
 import type {
   ImportSiteInput,
   SiteMarketInput,
@@ -265,6 +266,7 @@ async function listSites(organizationId: string) {
     loadOrganizationState(organizationId),
     SiteRegistryRepository.listGscConnections(organizationId),
   ]);
+  const plausibleReady = (await getPlausibleConfig()) !== null;
   const gscByProject = new Map(
     gscConnections.map((row) => [row.projectId, row.siteUrl]),
   );
@@ -279,7 +281,7 @@ async function listSites(organizationId: string) {
     ),
     gscConnected: gscByProject.has(project.id),
     gscSiteUrl: gscByProject.get(project.id) ?? null,
-    plausibleConfigured: Boolean(site?.plausibleSite),
+    plausibleStatus: plausibleStatus(site?.plausibleSite, plausibleReady),
   }));
   return sortBy(sites, (row) => (row.domain ?? row.name).toLowerCase());
 }
@@ -417,8 +419,30 @@ async function updateSiteRow(args: {
   return { success: true };
 }
 
+/** Records the Search Console property on the registry row, creating the row if needed. */
+async function setGscProperty(args: {
+  organizationId: string;
+  userId: string;
+  projectId: string;
+  gscProperty: string;
+}) {
+  const project = await ProjectRepository.getProjectForOrganization(
+    args.projectId,
+    args.organizationId,
+  );
+  if (!project) throw new AppError("NOT_FOUND");
+  const site = await SiteRegistryRepository.getSiteByProjectId(project.id);
+  await applyRegistry(
+    project,
+    site,
+    { gscProperty: args.gscProperty },
+    { userId: args.userId, imported: false },
+  );
+}
+
 export const SiteRegistryService = {
   listSites,
+  setGscProperty,
   upsertSites,
   updateSiteRow,
 } as const;

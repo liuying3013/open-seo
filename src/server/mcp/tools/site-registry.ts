@@ -18,7 +18,7 @@ export const listSitesTool = {
   config: {
     title: "List sites",
     description:
-      "Lists every project with its site registry: domain, business group, brand, role, ops status, repository and branch, hosting, template family, content format, markets, and whether Search Console and Plausible are connected. Uses no credits. Fields shown as null are unknown or not connected, not empty by design. Projects without a registry row (for example research workspaces) appear with registry null. Markets fall back to the project's default market when none are recorded.",
+      "Lists every project with its site registry: domain, business group, brand, role, ops status, repository and branch, hosting, template family, content format, markets, whether Search Console is connected, and the Plausible status (plausibleStatus: not_configured = no site mapped, unconnected = site mapped but the server has no Plausible API key, connected). Uses no credits. Fields shown as null are unknown or not connected, not empty by design. Projects without a registry row (for example research workspaces) appear with registry null. Markets fall back to the project's default market when none are recorded.",
     inputSchema: {} as Record<string, never>,
     outputSchema: z.looseObject({
       sites: z.array(looseObjectOutputSchema),
@@ -38,7 +38,7 @@ export const listSitesTool = {
       const markets = site.markets
         .map((market) => `${market.locationCode}/${market.languageCode}`)
         .join(",");
-      return `- ${site.projectId}  ${site.domain ?? site.name}  ${registry?.opsStatus ?? "unregistered"}  repo:${registry?.githubRepo ?? "unknown"}@${registry?.productionBranch ?? "?"}  markets:${markets}  gsc:${site.gscConnected ? "yes" : "no"}  plausible:${site.plausibleConfigured ? "yes" : "no"}`;
+      return `- ${site.projectId}  ${site.domain ?? site.name}  ${registry?.opsStatus ?? "unregistered"}  repo:${registry?.githubRepo ?? "unknown"}@${registry?.productionBranch ?? "?"}  markets:${markets}  gsc:${site.gscConnected ? "yes" : "no"}  plausible:${site.plausibleStatus}`;
     });
     return mcpResponse({
       text: `Sites (${sites.length}):\n${lines.join("\n")}`,

@@ -46,6 +46,19 @@ async function listGscConnections(organizationId: string) {
     .where(eq(gscConnections.organizationId, organizationId));
 }
 
+async function getSiteByProjectId(projectId: string) {
+  const [row] = await db
+    .select()
+    .from(projectSites)
+    .where(eq(projectSites.projectId, projectId))
+    .limit(1);
+  return row ?? null;
+}
+
+async function getPlausibleSite(projectId: string) {
+  return (await getSiteByProjectId(projectId))?.plausibleSite ?? null;
+}
+
 async function insertSite(values: ProjectSiteValues) {
   await db.insert(projectSites).values(values);
 }
@@ -92,6 +105,8 @@ export const SiteRegistryRepository = {
   listProjectsWithSites,
   listMarkets,
   listGscConnections,
+  getSiteByProjectId,
+  getPlausibleSite,
   insertSite,
   updateSite,
   insertMarket,

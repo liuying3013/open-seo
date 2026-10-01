@@ -37,6 +37,12 @@ import {
 } from "@/server/mcp/tools/google-analytics-tools";
 import { createProjectTool } from "@/server/mcp/tools/create-project";
 import { listProjectsTool } from "@/server/mcp/tools/list-projects";
+import { autoMatchGscPropertiesTool } from "@/server/mcp/tools/gsc-auto-match";
+import {
+  getPlausibleStatsTool,
+  listPlausibleGoalsTool,
+  listPlausibleSitesTool,
+} from "@/server/mcp/tools/plausible-tools";
 import {
   listSitesTool,
   upsertSiteRegistryTool,
@@ -239,6 +245,10 @@ export function createOpenSeoMcpServer(authProps: McpProps) {
   register(createProjectTool);
   register(listSitesTool);
   register(upsertSiteRegistryTool);
+  register(autoMatchGscPropertiesTool);
+  register(getPlausibleStatsTool);
+  register(listPlausibleSitesTool);
+  register(listPlausibleGoalsTool);
   register(getProjectContextTool);
   register(updateProjectContextTool);
   register(listSavedKeywordsTool);
