@@ -124,6 +124,11 @@ export function prepareSquashCommit(input: PrepareInput): PrepareResult {
     const atApprovedHead =
       !!approvedHead &&
       git(worktreeDir, ["rev-parse", "HEAD"]).startsWith(approvedHead);
+    // Rebase the branch's net change as one commit: an intermediate commit
+    // that a later commit undid must not conflict with production.
+    const forkPoint = git(worktreeDir, ["merge-base", base, "HEAD"]);
+    git(worktreeDir, ["reset", "--soft", forkPoint]);
+    git(worktreeDir, ["commit", "--no-verify", "-m", input.commitMessage]);
     const rebase = run(worktreeDir, ["rebase", base]);
     if (!rebase.ok) {
       run(worktreeDir, ["rebase", "--abort"]);

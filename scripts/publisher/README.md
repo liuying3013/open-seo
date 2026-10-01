@@ -48,9 +48,10 @@ For every site in the OpenSEO site registry that has a clone in `SITES_DIR`
 3. Rollback requests first: `git revert` of the recorded publish commit, push,
    deploy, verify, report `rolled_back`.
 4. Each due publication:
-   - In a publisher-owned worktree (`SITES_DIR/.publisher/<repo>`), rebase a
-     temporary copy of the task branch onto `origin/<production branch>`.
-     A conflict stops with `merge`.
+   - In a publisher-owned worktree (`SITES_DIR/.publisher/<repo>`), take the
+     task branch's net change as one commit and rebase it onto
+     `origin/<production branch>`, so a commit the branch later undid cannot
+     conflict. A conflict stops with `merge`.
    - Check that the rebased branch still carries the approved change (see
      Fingerprint below). If not, stop with `fingerprint` (the server voids
      the approval).

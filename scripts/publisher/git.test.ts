@@ -119,6 +119,26 @@ describe("prepareSquashCommit", () => {
     });
   });
 
+  it("rebases the branch's net change, ignoring commits it later undid", () => {
+    commitFile(clone, "list.md", "a\nb\nc\n", "list");
+    git(clone, ["push", "origin", "main"]);
+    git(clone, ["checkout", "-b", "task/page"]);
+    commitFile(clone, "list.md", "a\nB\nc\n", "try an edit");
+    commitFile(clone, "list.md", "a\nb\nc\nd\n", "undo it, add d");
+    const approvedHead = git(clone, ["rev-parse", "HEAD"]);
+    git(clone, ["checkout", "main"]);
+    commitFile(clone, "list.md", "a\nX\nc\n", "production edit");
+    git(clone, ["push", "origin", "main"]);
+    git(clone, ["fetch", "origin"]);
+
+    const result = prepare(null, approvedHead);
+    expect(result).toMatchObject({ ok: true });
+    if (!result.ok) return;
+    expect(git(worktree, ["show", `${result.commit}:list.md`])).toBe(
+      "a\nX\nc\nd",
+    );
+  });
+
   it("publishes a branch still at the approved head even when its patch id shifted", () => {
     makeTaskBranch();
     const approvedHead = git(clone, ["rev-parse", "task/page"]);
