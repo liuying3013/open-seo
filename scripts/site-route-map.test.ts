@@ -34,6 +34,9 @@ beforeAll(() => {
     "src/content/blog/hello.ar.mdx",
     "src/content/guides/intro.ar.mdx",
     "src/content/guides/intro.mdx",
+    "src/routes/news/$slug.tsx",
+    "src/content/news/launch.ar.mdx",
+    "src/content/news/launch.en.mdx",
   ]) {
     touch(file);
   }
@@ -106,6 +109,13 @@ describe("mapUrls", () => {
     expect(result["https://example.com/fr/guides/intro"].contentFile).toBe(
       "src/content/guides/intro.mdx",
     );
+  });
+
+  it("falls back to the English suffixed MDX when the URL has no language", () => {
+    expect(
+      map("https://example.com/news/launch")["https://example.com/news/launch"]
+        .contentFile,
+    ).toBe("src/content/news/launch.en.mdx");
   });
 
   it("maps splat routes and reports URLs with no route as unmatched", () => {

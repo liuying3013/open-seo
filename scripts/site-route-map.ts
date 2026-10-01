@@ -259,6 +259,22 @@ export function findContentFile(
       if (existsSync(path.join(repo, relative))) return relative;
     }
   }
+  // No language in the URL (the default-locale page) but every file carries a
+  // language suffix: take the English version, else the first one.
+  if (language) return null;
+  for (const directory of directories) {
+    const folder = path.join(repo, "src/content", directory);
+    if (!existsSync(folder)) continue;
+    const suffixed = readdirSync(folder)
+      .filter((file) => file.startsWith(`${slug}.`) && file.endsWith(".mdx"))
+      .filter((file) =>
+        /^[a-z]{2}(-[a-z]+)?$/i.test(file.slice(slug.length + 1, -4)),
+      )
+      .sort();
+    const pick =
+      suffixed.find((file) => file === `${slug}.en.mdx`) ?? suffixed[0];
+    if (pick) return path.posix.join("src/content", directory, pick);
+  }
   return null;
 }
 
