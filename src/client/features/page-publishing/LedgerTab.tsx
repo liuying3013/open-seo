@@ -58,7 +58,7 @@ function Screenshot({
       <img
         src={src}
         alt={`${label}截图`}
-        className="h-12 w-auto rounded border border-base-300"
+        className="h-12 w-16 rounded border border-base-300 object-cover object-top"
       />
     </button>
   );
@@ -180,7 +180,7 @@ function AttemptRow({
         {canRollback ? (
           <button
             type="button"
-            className="btn btn-outline btn-xs"
+            className="btn btn-outline btn-xs whitespace-nowrap"
             onClick={onRollback}
           >
             回滚
@@ -310,7 +310,14 @@ function AttemptsSection({ projectId }: { projectId: string }) {
 
       {image ? (
         <Modal maxWidth="max-w-5xl" onClose={() => setImage(null)}>
-          <img src={image} alt="发布截图" className="max-h-[75vh] w-auto" />
+          {/* Full-page screenshots are tall: scroll them at natural width. */}
+          <div className="max-h-[75vh] overflow-y-auto">
+            <img
+              src={image}
+              alt="发布截图"
+              className="mx-auto h-auto max-w-full"
+            />
+          </div>
           <div className="flex justify-end">
             <button
               type="button"
