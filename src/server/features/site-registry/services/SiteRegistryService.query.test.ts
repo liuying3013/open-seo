@@ -1,5 +1,13 @@
 import { readdirSync, readFileSync } from "node:fs";
-import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 import { db } from "@/db";
 import { SiteRegistryService } from "./SiteRegistryService";
 
@@ -59,6 +67,10 @@ beforeEach(async () => {
   ]) {
     await db.run(`DELETE FROM ${table}`);
   }
+});
+
+afterEach(() => {
+  vi.unstubAllEnvs();
 });
 
 const importSites = (
@@ -154,12 +166,19 @@ describe("site overview", () => {
     expect(research).toMatchObject({
       registry: null,
       gscConnected: false,
-      plausibleConfigured: false,
+      plausibleStatus: "not_configured",
       markets: [{ locationCode: 2840, languageCode: "en", isPrimary: true }],
     });
     expect(example).toMatchObject({
       gscConnected: true,
-      plausibleConfigured: true,
+      plausibleStatus: "unconnected",
     });
+
+    vi.stubEnv("PLAUSIBLE_BASE_URL", "https://plausible.test");
+    vi.stubEnv("PLAUSIBLE_API_KEY", "key");
+    const withKey = await SiteRegistryService.listSites(org);
+    expect(
+      withKey.find((site) => site.projectId === registered.projectId),
+    ).toMatchObject({ plausibleStatus: "connected" });
   });
 });

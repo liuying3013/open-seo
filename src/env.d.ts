@@ -70,6 +70,11 @@ declare namespace Cloudflare {
     // opportunity-intel LLM calls. When set, requests skip OpenRouter-specific
     // extensions (usage/provider/zdr).
     OPENROUTER_BASE_URL?: string;
+
+    // Plausible Stats API (traffic analytics). Both must be set for the
+    // Plausible integration; otherwise it reads as "not connected".
+    PLAUSIBLE_BASE_URL?: string;
+    PLAUSIBLE_API_KEY?: string;
   }
 }
 

@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { waitUntil } from "cloudflare:workers";
 import { z } from "zod";
+import { GscAutoMatchService } from "@/server/features/gsc/services/GscAutoMatchService";
 import { GscService } from "@/server/features/gsc/services/GscService";
 import { hasSelfHostedGoogleOAuthConfig } from "@/server/features/google/oauth-config";
 import {
@@ -157,4 +158,20 @@ export const startSelfHostedGscLink = createServerFn({ method: "POST" })
     });
 
     return { url };
+  });
+
+// Account-level: spans every project in the organization and every Google
+// account the user has linked. `dryRun` returns the plan without writing.
+export const autoMatchGscProperties = createServerFn({ method: "POST" })
+  .middleware(requireAuthenticatedContext)
+  .validator(z.object({ dryRun: z.boolean() }))
+  .handler(async ({ data, context }) => {
+    if (!data.dryRun) {
+      requireOrgPermission(context, { integration: ["manage"] });
+    }
+    return GscAutoMatchService.autoMatch({
+      organizationId: context.organizationId,
+      userId: context.userId,
+      dryRun: data.dryRun,
+    });
   });

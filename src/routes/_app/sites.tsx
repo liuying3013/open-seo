@@ -2,6 +2,7 @@ import * as React from "react";
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Pencil } from "lucide-react";
+import { GscMatchModal } from "@/client/features/sites/GscMatchModal";
 import { SiteEditModal } from "@/client/features/sites/SiteEditModal";
 import {
   CONTENT_FORMAT_LABELS,
@@ -36,6 +37,23 @@ function Connection({ on, onLabel }: { on: boolean; onLabel: string }) {
     <span className="badge badge-success badge-sm">{onLabel}</span>
   ) : (
     <span className="badge badge-ghost badge-sm">未接入</span>
+  );
+}
+
+const PLAUSIBLE_BADGES = {
+  not_configured: { className: "badge-ghost", label: "未配置站点" },
+  unconnected: { className: "badge-warning", label: "未接入（缺 API key）" },
+  connected: { className: "badge-success", label: "已接入" },
+} as const;
+
+function PlausibleStatus({
+  status,
+}: {
+  status: SiteOverviewRow["plausibleStatus"];
+}) {
+  const badge = PLAUSIBLE_BADGES[status];
+  return (
+    <span className={`badge badge-sm ${badge.className}`}>{badge.label}</span>
   );
 }
 
@@ -147,7 +165,7 @@ function SiteRow({
         <Connection on={site.gscConnected} onLabel="已连接" />
       </td>
       <td>
-        <Connection on={site.plausibleConfigured} onLabel="已配置" />
+        <PlausibleStatus status={site.plausibleStatus} />
       </td>
       <td className="text-right">
         <button
@@ -203,6 +221,7 @@ function SitesPage() {
   const [status, setStatus] = React.useState(ALL);
   const [template, setTemplate] = React.useState(ALL);
   const [editingId, setEditingId] = React.useState<string | null>(null);
+  const [matchingGsc, setMatchingGsc] = React.useState(false);
 
   const groups = [
     ...new Set(
@@ -269,7 +288,14 @@ function SitesPage() {
               { value: NONE, label: UNKNOWN_LABEL },
             ]}
           />
-          <span className="ml-auto text-sm text-base-content/60">
+          <button
+            type="button"
+            className="btn btn-outline btn-sm ml-auto"
+            onClick={() => setMatchingGsc(true)}
+          >
+            按域名匹配 GSC
+          </button>
+          <span className="text-sm text-base-content/60">
             {filtered.length} / {sites.length}
           </span>
         </div>
@@ -321,6 +347,9 @@ function SitesPage() {
           </div>
         )}
       </div>
+      {matchingGsc ? (
+        <GscMatchModal onClose={() => setMatchingGsc(false)} />
+      ) : null}
       {editing ? (
         <SiteEditModal
           // Remount per site so the draft state starts from the stored row.
