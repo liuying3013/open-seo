@@ -1,4 +1,13 @@
-import { and, desc, eq, inArray, isNull, lte, or } from "drizzle-orm";
+import {
+  and,
+  desc,
+  eq,
+  inArray,
+  isNotNull,
+  isNull,
+  lte,
+  or,
+} from "drizzle-orm";
 import { db } from "@/db";
 import { runBatch } from "@/db/runBatch";
 import {
@@ -12,6 +21,13 @@ import {
 } from "@/db/schema";
 import { PUBLISHED_ASSET_STATUSES } from "@/shared/pagePublishing";
 import { revokeActive } from "./ApprovalsRepository";
+
+// A pushed-but-unverified publish leaves the work order at ready_to_publish
+// with its commit live, so it is revertable like a published one.
+export const ROLLBACK_ELIGIBLE_STATUSES = [
+  ...PUBLISHED_ASSET_STATUSES,
+  "ready_to_publish",
+] as const;
 
 type AttemptRow = typeof publishAttempts.$inferSelect;
 type AttemptStatus = AttemptRow["status"];
@@ -141,7 +157,7 @@ async function markRolledBack(input: {
       .where(
         and(
           eq(contentAssets.id, input.assetId),
-          inArray(contentAssets.status, [...PUBLISHED_ASSET_STATUSES]),
+          inArray(contentAssets.status, [...ROLLBACK_ELIGIBLE_STATUSES]),
         ),
       ),
   ]);
@@ -159,6 +175,9 @@ async function listActiveForAsset(assetId: string) {
     );
 }
 
+// The last commit a publish attempt actually pushed. An unverified attempt
+// counts: the commit is live on the production branch even though the live
+// check did not pass, so it must stay revertable.
 async function getLastPublishedMergeCommit(assetId: string) {
   const [row] = await db
     .select({ mergeCommit: publishAttempts.mergeCommit })
@@ -167,7 +186,8 @@ async function getLastPublishedMergeCommit(assetId: string) {
       and(
         eq(publishAttempts.assetId, assetId),
         eq(publishAttempts.kind, "publish"),
-        eq(publishAttempts.status, "published"),
+        inArray(publishAttempts.status, ["published", "unverified"]),
+        isNotNull(publishAttempts.mergeCommit),
       ),
     )
     .orderBy(desc(publishAttempts.createdAt))
@@ -244,7 +264,7 @@ async function listQueuedRollbacks(projectId: string) {
         eq(contentAssets.projectId, projectId),
         eq(publishAttempts.kind, "rollback"),
         eq(publishAttempts.status, "queued"),
-        inArray(contentAssets.status, [...PUBLISHED_ASSET_STATUSES]),
+        inArray(contentAssets.status, [...ROLLBACK_ELIGIBLE_STATUSES]),
       ),
     )
     .orderBy(publishAttempts.createdAt);

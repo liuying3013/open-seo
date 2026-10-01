@@ -1,10 +1,12 @@
 import { ContentOpsError } from "@/server/features/content-ops/contentOpsErrors";
 import { AssetsRepository } from "@/server/features/content-ops/repositories/AssetsRepository";
 import { assertAssetTransition } from "@/server/features/content-ops/stateMachine";
-import { PUBLISHED_ASSET_STATUSES } from "@/shared/pagePublishing";
 import { parseChecksReport } from "../rules/contentChecks";
 import { ApprovalsRepository } from "../repositories/ApprovalsRepository";
-import { PublishAttemptsRepository } from "../repositories/PublishAttemptsRepository";
+import {
+  PublishAttemptsRepository,
+  ROLLBACK_ELIGIBLE_STATUSES,
+} from "../repositories/PublishAttemptsRepository";
 import { VersionsRepository } from "../repositories/VersionsRepository";
 
 // Approval, rejection, revocation and rollback requests are human decisions.
@@ -190,10 +192,12 @@ async function requestRollback(input: {
 }) {
   assertSession(input.actor);
   const asset = await loadAsset(input.projectId, input.assetId);
-  if (!PUBLISHED_ASSET_STATUSES.some((status) => status === asset.status)) {
+  // ready_to_publish qualifies only after an unverified publish, i.e. when a
+  // pushed commit exists (checked below).
+  if (!ROLLBACK_ELIGIBLE_STATUSES.some((status) => status === asset.status)) {
     throw new ContentOpsError(
       "INVALID_STATUS_TRANSITION",
-      "Only a published work order can be rolled back.",
+      "Only a published (or pushed but unverified) work order can be rolled back.",
     );
   }
   const attempts = await PublishAttemptsRepository.listActiveForAsset(asset.id);

@@ -338,6 +338,36 @@ describe("publish queue", () => {
     });
   });
 
+  it("lets a pushed but unverified publish be rolled back to drafted", async () => {
+    const { approvalId } = await approved();
+    const attemptId = await startAttempt(approvalId);
+    await PublishService.recordAttempt({
+      projectId: project,
+      attemptId,
+      status: "published",
+      mergeCommit: "merge111",
+      ...liveOk,
+      textMatch: 40,
+    });
+    expect(await assetStatus()).toBe("ready_to_publish");
+    expect((await PublishService.getQueue(project)).publish).toEqual([]);
+
+    const { attemptId: rollbackId } = await ApprovalService.requestRollback({
+      projectId: project,
+      assetId: "asset-1",
+      actor: user,
+    });
+    expect((await PublishService.getQueue(project)).rollbacks).toMatchObject([
+      { attemptId: rollbackId, mergeCommit: "merge111" },
+    ]);
+    await PublishService.recordAttempt({
+      projectId: project,
+      attemptId: rollbackId,
+      status: "rolled_back",
+    });
+    expect(await assetStatus()).toBe("drafted");
+  });
+
   it("queues rollback requests only for published work orders", async () => {
     await expectCode(
       ApprovalService.requestRollback({

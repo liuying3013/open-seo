@@ -90,6 +90,13 @@ async function getQueue(projectId: string) {
     const draft = parseStoredDraft(version.draft);
     if (!draft) continue;
     const attempts = await PublishAttemptsRepository.listForAsset(asset.id);
+    // An approval is spent once its change reached production, even when the
+    // live check did not pass: the next step is a rollback or a new version.
+    const pushed = attempts.some(
+      (attempt) =>
+        attempt.approvalId === approval.id && attempt.status === "unverified",
+    );
+    if (pushed) continue;
     const active = attempts.find((attempt) =>
       ACTIVE_ATTEMPT_STATUSES.includes(attempt.status),
     );
