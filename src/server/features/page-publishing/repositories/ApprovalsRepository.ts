@@ -7,7 +7,6 @@ import {
   contentAssets,
 } from "@/db/schema";
 
-
 type Decision = {
   assetId: string;
   projectId: string;

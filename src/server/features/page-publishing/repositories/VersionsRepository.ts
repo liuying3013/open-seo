@@ -7,7 +7,6 @@ import {
   contentAssetVersions,
 } from "@/db/schema";
 
-
 type NewVersion = {
   assetId: string;
   projectId: string;
