@@ -6,6 +6,7 @@ import {
   Check,
   ChevronsUpDown,
   FolderCog,
+  Telescope,
   Plus,
   Search,
   Settings,
@@ -374,6 +375,18 @@ export function ProjectSwitcher({
               >
                 <FolderCog className="size-4" />
                 Manage projects
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/opportunities"
+                onClick={() => {
+                  closePanel();
+                  onCloseDrawer?.();
+                }}
+              >
+                <Telescope className="size-4" />
+                Opportunities
               </Link>
             </li>
           </ul>

@@ -172,6 +172,11 @@ export const refreshSavedKeywordMetricsSchema = z.object({
   projectId: z.string().min(1),
 });
 
+export const listResearchedKeywordsSchema = z.object({
+  projectId: z.string().min(1),
+  limit: z.number().int().min(1).max(100).default(50),
+});
+
 export type ResearchKeywordsInput = z.infer<typeof researchKeywordsSchema>;
 export type SaveKeywordsInput = z.infer<typeof saveKeywordsSchema>;
 type ResolvedMarket = { locationCode: number; languageCode: string };
@@ -218,6 +223,9 @@ export type DeleteSavedKeywordTagInput = z.infer<
 
 export type RefreshSavedKeywordMetricsInput = z.infer<
   typeof refreshSavedKeywordMetricsSchema
+>;
+export type ListResearchedKeywordsInput = z.infer<
+  typeof listResearchedKeywordsSchema
 >;
 export const serpAnalysisSchema = z.object({
   projectId: z.string().min(1),

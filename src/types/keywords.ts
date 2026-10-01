@@ -48,6 +48,18 @@ export type CandidateKeywordRow = {
   createdAt: string;
 };
 
+export type ResearchedKeywordRow = {
+  keyword: string;
+  locationCode: number;
+  languageCode: string;
+  searchVolume: number | null;
+  cpc: number | null;
+  competition: number | null;
+  keywordDifficulty: number | null;
+  intent: string | null;
+  fetchedAt: string;
+};
+
 export type SavedKeywordTag = {
   id: string;
   name: string;

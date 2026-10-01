@@ -6,6 +6,7 @@ import {
   saveCandidateKeywordsSchema,
   getCandidateKeywordsSchema,
   getSavedKeywordsSchema,
+  listResearchedKeywordsSchema,
   exportSavedKeywordsSchema,
   removeCandidateKeywordsSchema,
   removeSavedKeywordsSchema,
@@ -106,6 +107,20 @@ export const getSavedKeywords = createServerFn({ method: "POST" })
   .validator(getSavedKeywordsSchema)
   .handler(async ({ data, context }) => {
     return KeywordResearchService.getSavedKeywords({
+      ...data,
+      projectId: context.projectId,
+    });
+  });
+
+export const listResearchedKeywords = createServerFn({ method: "POST" })
+  .middleware(requireProjectContext)
+  .validator(listResearchedKeywordsSchema)
+  .handler(async ({ data, context }) => {
+    if (shouldUseKeywordE2eFixtures()) {
+      return { rows: [], totalCount: 0 };
+    }
+
+    return KeywordResearchService.listResearchedKeywords({
       ...data,
       projectId: context.projectId,
     });

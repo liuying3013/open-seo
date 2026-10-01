@@ -115,6 +115,20 @@ import {
   buildEvidencePackTool,
   generateBriefTool,
 } from "@/server/mcp/tools/content-ops-content";
+import { readRankingPagesTool } from "@/server/mcp/tools/content-factory-research";
+import {
+  addKnowledgeTool,
+  extractKnowledgeDeltaTool,
+  listKnowledgeTool,
+  reviewKnowledgeTool,
+} from "@/server/mcp/tools/content-factory-knowledge";
+import { getContextPackTool } from "@/server/mcp/tools/content-factory-context";
+import { compareExistingPagesTool } from "@/server/mcp/tools/content-factory-coverage";
+import { getTaskPoolTool } from "@/server/mcp/tools/content-factory-pool";
+import {
+  generateDraftTool,
+  runQaTool,
+} from "@/server/mcp/tools/content-factory-draft";
 import {
   addOpportunitiesTool,
   getOpportunityPipelineStatusTool,
@@ -291,6 +305,16 @@ export function createOpenSeoMcpServer(authProps: McpProps) {
   register(buildEvidencePackTool);
   register(approveEvidencePackTool);
   register(generateBriefTool);
+  register(readRankingPagesTool);
+  register(getContextPackTool);
+  register(compareExistingPagesTool);
+  register(getTaskPoolTool);
+  register(generateDraftTool);
+  register(runQaTool);
+  register(addKnowledgeTool);
+  register(extractKnowledgeDeltaTool);
+  register(reviewKnowledgeTool);
+  register(listKnowledgeTool);
   register(addOpportunitiesTool);
   register(runOpportunityScanTool);
   register(getOpportunityPipelineStatusTool);

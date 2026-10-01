@@ -274,6 +274,7 @@ async function buildInventory(db: Db, user: UserRow) {
     ),
     projects: projectIds.length,
     saved_keywords: await projectCount(schema.savedKeywords),
+    candidate_keywords: await projectCount(schema.candidateKeywords),
     audits: await projectCount(schema.audits),
     rank_snapshots:
       projectIds.length === 0

@@ -1,6 +1,7 @@
 import { getDatabaseProvider } from "./provider";
 import * as sqliteApp from "./app.schema";
 import * as sqliteCandidateKeywords from "./candidate-keywords.schema";
+import * as sqliteContentFactory from "./content-factory.schema";
 import * as sqliteContentOps from "./content-ops.schema";
 import * as sqliteOpportunityIntel from "./opportunity-intel.schema";
 import * as sqliteProjectContext from "./project-context.schema";
@@ -15,6 +16,7 @@ import * as sqliteGsc from "./gsc.schema";
 import * as sqliteTelemetry from "./telemetry.schema";
 import * as pgApp from "./pg/app.schema";
 import * as pgCandidateKeywords from "./pg/candidate-keywords.schema";
+import * as pgContentFactory from "./pg/content-factory.schema";
 import * as pgContentOps from "./pg/content-ops.schema";
 import * as pgOpportunityIntel from "./pg/opportunity-intel.schema";
 import * as pgProjectContext from "./pg/project-context.schema";
@@ -40,6 +42,7 @@ import * as pgTelemetry from "./pg/telemetry.schema";
 // parity test is its drift guard.
 type AppSchema = typeof sqliteApp &
   typeof sqliteCandidateKeywords &
+  typeof sqliteContentFactory &
   typeof sqliteContentOps &
   typeof sqliteOpportunityIntel &
   typeof sqliteProjectContext &
@@ -58,6 +61,7 @@ const runtimeSchema =
     ? {
         ...pgApp,
         ...pgCandidateKeywords,
+        ...pgContentFactory,
         ...pgContentOps,
         ...pgOpportunityIntel,
         ...pgProjectContext,
@@ -74,6 +78,7 @@ const runtimeSchema =
     : {
         ...sqliteApp,
         ...sqliteCandidateKeywords,
+        ...sqliteContentFactory,
         ...sqliteContentOps,
         ...sqliteOpportunityIntel,
         ...sqliteProjectContext,
@@ -109,6 +114,12 @@ export const {
   evidencePacks,
   contentAssets,
   contentBudgets,
+  researchPages,
+  knowledgeEntries,
+  knowledgeSources,
+  knowledgeUsages,
+  knowledgeDeltas,
+  knowledgeConflicts,
   opportunities,
   opportunityRelationships,
   opportunityKeywords,

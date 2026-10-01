@@ -2,6 +2,7 @@ import {
   deleteSavedKeywordTag,
   getSavedKeywords,
   getSerpAnalysis,
+  listResearchedKeywords,
   removeSavedKeywords,
   research,
   saveKeywords,
@@ -22,4 +23,5 @@ export const KeywordResearchService = {
   deleteSavedKeywordTag,
   removeSavedKeywords,
   refreshSavedKeywordMetrics,
+  listResearchedKeywords,
 } as const;

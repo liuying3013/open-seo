@@ -7,6 +7,7 @@ import { sort } from "remeda";
 import { describe, expect, it } from "vitest";
 import * as sqliteApp from "./app.schema";
 import * as sqliteCandidateKeywords from "./candidate-keywords.schema";
+import * as sqliteContentFactory from "./content-factory.schema";
 import * as sqliteContentOps from "./content-ops.schema";
 import * as sqliteOpportunityIntel from "./opportunity-intel.schema";
 import * as sqliteProjectContext from "./project-context.schema";
@@ -21,6 +22,7 @@ import * as sqliteGsc from "./gsc.schema";
 import * as sqliteTelemetry from "./telemetry.schema";
 import * as pgApp from "./pg/app.schema";
 import * as pgCandidateKeywords from "./pg/candidate-keywords.schema";
+import * as pgContentFactory from "./pg/content-factory.schema";
 import * as pgContentOps from "./pg/content-ops.schema";
 import * as pgOpportunityIntel from "./pg/opportunity-intel.schema";
 import * as pgProjectContext from "./pg/project-context.schema";
@@ -157,6 +159,7 @@ function checkNames(table: Table, dialect: Dialect): string[] {
 const sqliteAppTables = tablesFrom(
   sqliteApp,
   sqliteCandidateKeywords,
+  sqliteContentFactory,
   sqliteContentOps,
   sqliteOpportunityIntel,
   sqliteProjectContext,
@@ -172,6 +175,7 @@ const sqliteAppTables = tablesFrom(
 const pgAppTables = tablesFrom(
   pgApp,
   pgCandidateKeywords,
+  pgContentFactory,
   pgContentOps,
   pgOpportunityIntel,
   pgProjectContext,

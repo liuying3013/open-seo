@@ -344,6 +344,25 @@ async function listSavedKeywordRowsByKeywords(params: {
 const QUERY_CHUNK_SIZE = 80;
 const DELETE_CHUNK_SIZE = 90;
 
+async function listRecentKeywordMetrics(params: {
+  projectId: string;
+  limit: number;
+}): Promise<{ rows: KeywordMetricRecord[]; totalCount: number }> {
+  const [{ value: totalCount } = { value: 0 }] = await db
+    .select({ value: count() })
+    .from(keywordMetrics)
+    .where(eq(keywordMetrics.projectId, params.projectId));
+
+  const rows = await db
+    .select()
+    .from(keywordMetrics)
+    .where(eq(keywordMetrics.projectId, params.projectId))
+    .orderBy(desc(keywordMetrics.fetchedAt), desc(keywordMetrics.id))
+    .limit(params.limit);
+
+  return { rows, totalCount };
+}
+
 async function removeSavedKeywords(
   savedKeywordIds: string[],
   projectId: string,
@@ -370,6 +389,7 @@ export const KeywordResearchRepository = {
   countSavedKeywords,
   saveKeywordsToProject,
   listSavedKeywordsByProject,
+  listRecentKeywordMetrics,
   addTagsToSavedKeywords: SavedKeywordTagsRepository.addTagsToSavedKeywords,
   replaceTagsForSavedKeywords:
     SavedKeywordTagsRepository.replaceTagsForSavedKeywords,

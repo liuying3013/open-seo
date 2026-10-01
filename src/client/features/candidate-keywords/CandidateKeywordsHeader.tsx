@@ -73,7 +73,15 @@ export function CandidateKeywordsHeader({
                 <span> · </span>
               </>
             ) : null}
-            Shortlist for content work. Opportunity research stays in{" "}
+            Shortlist for{" "}
+            <Link
+              to="/p/$projectId/content-ops"
+              params={{ projectId }}
+              className="link link-hover"
+            >
+              内容工作台
+            </Link>
+            . Opportunity research stays in{" "}
             <Link
               to="/p/$projectId/saved"
               params={{ projectId }}

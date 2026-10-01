@@ -1,8 +1,10 @@
 import {
   Bookmark,
+  BookOpen,
   Bot,
   Brain,
   ClipboardCheck,
+  Compass,
   FileText,
   Globe,
   LayoutDashboard,
@@ -45,6 +47,11 @@ const projectNavItems = [
     to: "/p/$projectId/rank-tracking" as const,
     label: "Rank Tracking",
     icon: TrendingUp,
+  },
+  {
+    to: "/p/$projectId/content-ops" as const,
+    label: "内容工作台",
+    icon: Compass,
   },
   {
     to: "/p/$projectId/search-performance" as const,
@@ -102,11 +109,17 @@ const opportunitiesNavItem = linkOptions({
   icon: Telescope,
 });
 
+const learningsNavItem = linkOptions({
+  to: "/learnings" as const,
+  label: "学习文档",
+  icon: BookOpen,
+});
+
 // Always-visible sidebar group. Discover holds the cross-project opportunity
 // funnel (specs/0012) — it has no project context by design.
 export const discoverNavGroup = {
   label: "Discover",
-  items: [opportunitiesNavItem],
+  items: [opportunitiesNavItem, learningsNavItem],
 };
 
 // Shown only when no project is selected; with a project, Agent setup lives in
@@ -155,6 +168,7 @@ export function getProjectNavGroups(projectId: string) {
         byPath("/p/$projectId/rank-tracking"),
         byPath("/p/$projectId/saved"),
         byPath("/p/$projectId/candidate-keywords"),
+        byPath("/p/$projectId/content-ops"),
         byPath("/p/$projectId/audit"),
       ],
     },

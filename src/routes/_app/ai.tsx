@@ -29,6 +29,10 @@ const SKILLS = [
     "competitor-analysis",
     "Studies one competitor's keywords, content, and backlinks.",
   ],
+  [
+    "content-ops",
+    "Runs keyword clusters through SERP scoring, deployment decisions, evidence packs, and briefs.",
+  ],
   ["link-prospecting", "Finds link prospects and drafts outreach."],
   ["local-seo", "Audits a Google Business Profile and Maps visibility."],
   ["seo-report", "Saves any of the above as a report on your Reports page."],

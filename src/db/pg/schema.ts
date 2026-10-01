@@ -1,5 +1,6 @@
 export * from "./app.schema";
 export * from "./candidate-keywords.schema";
+export * from "./content-factory.schema";
 export * from "./content-ops.schema";
 export * from "./opportunity-intel.schema";
 export * from "./project-context.schema";

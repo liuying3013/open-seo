@@ -14,6 +14,11 @@ import { EvidencePacksRepository } from "../repositories/EvidencePacksRepository
 import { OffersRepository } from "../repositories/OffersRepository";
 import { SerpRepository } from "../repositories/SerpRepository";
 import { getProjectContext } from "@/server/features/project-context/services/ProjectContextService";
+// Cross-domain read: content-factory owns the ranking-page bodies, content-ops
+// consumes them here. Only the repository is imported (a leaf over the DB), so
+// the two feature domains never form a service-level cycle.
+import { ResearchPagesRepository } from "@/server/features/content-factory/repositories/ResearchPagesRepository";
+import { KnowledgeService } from "@/server/features/content-factory/services/KnowledgeService";
 import { runStructuredLlm } from "./llm";
 import {
   ENTITY_TAXONOMY_SLUG,
@@ -32,24 +37,6 @@ import {
 // a pack built from them alone reads like a deployment note pretending to be a
 // writing brief. The gate below is enforced server-side rather than left to
 // the agent, matching the entity-disambiguation guard.
-
-// TODO(content-factory port, step 3b): content-factory owns the ranking-page
-// bodies and the knowledge base; content-ops reads them here. Until that module
-// is ported these are empty, so buildPack always stops at the
-// RANKING_PAGES_NOT_READ gate. Restore from seo-ops:
-//   researchPages = ResearchPagesRepository.getLatestForCluster(clusterId)
-//     (@/server/features/content-factory/repositories/ResearchPagesRepository)
-//   knowledge = KnowledgeService.listForWriting({ projectId })
-//     (@/server/features/content-factory/services/KnowledgeService)
-// and bring back EvidencePackService.test.ts from seo-ops with it.
-type RankingPage = {
-  url: string;
-  title: string | null;
-  bodyText: string | null;
-  fetchStatus: string;
-};
-const noResearchPages: RankingPage[] = [];
-const noKnowledge: { fresh: Array<{ statement: string }> } = { fresh: [] };
 
 const serpFeaturesSchema = z
   .object({
@@ -73,17 +60,20 @@ async function buildPack(input: { projectId: string; clusterId: string }) {
     );
   }
 
-  const [keywords, snapshotGroups, assets, context] = await Promise.all([
-    ClustersRepository.getKeywords(input.clusterId),
-    SerpRepository.getLatestForCluster(input.clusterId),
-    AssetsRepository.listByCluster(input.clusterId),
-    getProjectContext(input.projectId),
-  ]);
-  const researchPages = noResearchPages;
+  const [keywords, snapshotGroups, assets, context, researchPages] =
+    await Promise.all([
+      ClustersRepository.getKeywords(input.clusterId),
+      SerpRepository.getLatestForCluster(input.clusterId),
+      AssetsRepository.listByCluster(input.clusterId),
+      getProjectContext(input.projectId),
+      ResearchPagesRepository.getLatestForCluster(input.clusterId),
+    ]);
   // Facts the project already holds — chiefly the operator-supplied product
   // specs. Feeding them in is what stops the pack asking for the same SKU
   // dimensions on every cluster.
-  const knowledge = noKnowledge;
+  const knowledge = await KnowledgeService.listForWriting({
+    projectId: input.projectId,
+  });
 
   if (researchPages.length === 0) {
     throw new ContentOpsError(

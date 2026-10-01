@@ -10,3 +10,4 @@ export {
   removeSavedKeywords,
 } from "./saved-keywords";
 export { refreshSavedKeywordMetrics } from "./refresh-metrics";
+export { listResearchedKeywords } from "./list-researched";

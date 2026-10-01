@@ -1,6 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import { Clock, Globe, History, Search, X } from "lucide-react";
+import { useResearchedKeywords } from "@/client/features/keywords/hooks/useResearchedKeywords";
 import { LOCATIONS } from "@/client/features/keywords/utils";
+import { KeywordResearchHistoryList } from "./KeywordResearchHistoryList";
 import type { KeywordResearchControllerState } from "./types";
 
 type Props = {
@@ -58,14 +60,22 @@ function SearchHistoryState({
   projectId: string;
 }) {
   const { history, historyLoaded, removeHistoryItem } = controller;
+  const researched = useResearchedKeywords(projectId, historyLoaded);
+  const researchedRows = researched.data?.rows ?? [];
+  const researchedTotal = researched.data?.totalCount ?? 0;
 
   if (!historyLoaded) {
     return null;
   }
 
+  const showSeedHistory = history.length > 0;
+  const showResearched = researchedRows.length > 0;
+  const showEmptyStart =
+    !showSeedHistory && !showResearched && !researched.isLoading;
+
   return (
     <div className="space-y-4 pt-1">
-      {history.length > 0 ? (
+      {showSeedHistory ? (
         <section className="rounded-2xl border border-base-300 bg-base-100 p-5 md:p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
@@ -122,7 +132,23 @@ function SearchHistoryState({
             ))}
           </div>
         </section>
-      ) : (
+      ) : null}
+      {researched.isLoading && !showResearched ? (
+        <section className="rounded-2xl border border-base-300 bg-base-100 p-5 md:p-6">
+          <div className="h-4 w-56 animate-pulse rounded bg-base-300" />
+          <div className="mt-3 space-y-2">
+            <div className="h-12 animate-pulse rounded-lg bg-base-200" />
+            <div className="h-12 animate-pulse rounded-lg bg-base-200" />
+            <div className="h-12 animate-pulse rounded-lg bg-base-200" />
+          </div>
+        </section>
+      ) : null}
+      <KeywordResearchHistoryList
+        projectId={projectId}
+        rows={researchedRows}
+        totalCount={researchedTotal}
+      />
+      {showEmptyStart ? (
         <section className="rounded-2xl border border-dashed border-base-300 bg-base-100/70 p-6 text-center text-base-content/50 space-y-3">
           <Search className="size-10 mx-auto opacity-40" />
           <p className="text-lg font-medium text-base-content/80">
@@ -133,7 +159,7 @@ function SearchHistoryState({
             keyword ideas.
           </p>
         </section>
-      )}
+      ) : null}
     </div>
   );
 }

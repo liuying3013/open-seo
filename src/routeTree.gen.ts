@@ -30,17 +30,20 @@ import { Route as AppSupportRouteImport } from './routes/_app/support'
 import { Route as AppSettingsRouteImport } from './routes/_app/settings'
 import { Route as AppProjectsRouteImport } from './routes/_app/projects'
 import { Route as AppOpportunitiesRouteImport } from './routes/_app/opportunities'
+import { Route as AppLearningsRouteImport } from './routes/_app/learnings'
 import { Route as AppBillingRouteImport } from './routes/_app/billing'
 import { Route as AppAiRouteImport } from './routes/_app/ai'
 import { Route as Char91DotwellKnownChar93OpenaiAppsChallengeRouteImport } from './routes/[.well-known]/openai-apps-challenge'
 import { Route as STokenIndexRouteImport } from './routes/s/$token/index'
 import { Route as AuthenticatedOnboardingIndexRouteImport } from './routes/_authenticated.onboarding.index'
 import { Route as AppSettingsIndexRouteImport } from './routes/_app/settings/index'
+import { Route as AppLearningsIndexRouteImport } from './routes/_app/learnings/index'
 import { Route as STokenRawRouteImport } from './routes/s/$token/raw'
 import { Route as STokenOgDotpngRouteImport } from './routes/s/$token/og[.]png'
 import { Route as ApiAutumnSplatRouteImport } from './routes/api/autumn/$'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as AppSettingsOrganizationRouteImport } from './routes/_app/settings/organization'
+import { Route as AppLearningsSlugRouteImport } from './routes/_app/learnings/$slug'
 import { Route as AppHelpOpenrouterApiKeyRouteImport } from './routes/_app/help/openrouter-api-key'
 import { Route as AppHelpDataforseoApiKeyRouteImport } from './routes/_app/help/dataforseo-api-key'
 import { Route as ProjectPProjectIdRouteRouteImport } from './routes/_project/p/$projectId/route'
@@ -56,6 +59,7 @@ import { Route as ProjectPProjectIdPromptExplorerRouteImport } from './routes/_p
 import { Route as ProjectPProjectIdKeywordsRouteImport } from './routes/_project/p/$projectId/keywords'
 import { Route as ProjectPProjectIdDomainRouteImport } from './routes/_project/p/$projectId/domain'
 import { Route as ProjectPProjectIdContextRouteImport } from './routes/_project/p/$projectId/context'
+import { Route as ProjectPProjectIdContentOpsRouteImport } from './routes/_project/p/$projectId/content-ops'
 import { Route as ProjectPProjectIdCandidateKeywordsRouteImport } from './routes/_project/p/$projectId/candidate-keywords'
 import { Route as ProjectPProjectIdBrandLookupRouteImport } from './routes/_project/p/$projectId/brand-lookup'
 import { Route as ProjectPProjectIdBacklinksRouteImport } from './routes/_project/p/$projectId/backlinks'
@@ -173,6 +177,11 @@ const AppOpportunitiesRoute = AppOpportunitiesRouteImport.update({
   path: '/opportunities',
   getParentRoute: () => AppRouteRoute,
 } as any)
+const AppLearningsRoute = AppLearningsRouteImport.update({
+  id: '/learnings',
+  path: '/learnings',
+  getParentRoute: () => AppRouteRoute,
+} as any)
 const AppBillingRoute = AppBillingRouteImport.update({
   id: '/billing',
   path: '/billing',
@@ -205,6 +214,11 @@ const AppSettingsIndexRoute = AppSettingsIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppSettingsRoute,
 } as any)
+const AppLearningsIndexRoute = AppLearningsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppLearningsRoute,
+} as any)
 const STokenRawRoute = STokenRawRouteImport.update({
   id: '/s/$token/raw',
   path: '/s/$token/raw',
@@ -229,6 +243,11 @@ const AppSettingsOrganizationRoute = AppSettingsOrganizationRouteImport.update({
   id: '/organization',
   path: '/organization',
   getParentRoute: () => AppSettingsRoute,
+} as any)
+const AppLearningsSlugRoute = AppLearningsSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => AppLearningsRoute,
 } as any)
 const AppHelpOpenrouterApiKeyRoute = AppHelpOpenrouterApiKeyRouteImport.update({
   id: '/help/openrouter-api-key',
@@ -309,6 +328,12 @@ const ProjectPProjectIdContextRoute =
   ProjectPProjectIdContextRouteImport.update({
     id: '/context',
     path: '/context',
+    getParentRoute: () => ProjectPProjectIdRouteRoute,
+  } as any)
+const ProjectPProjectIdContentOpsRoute =
+  ProjectPProjectIdContentOpsRouteImport.update({
+    id: '/content-ops',
+    path: '/content-ops',
     getParentRoute: () => ProjectPProjectIdRouteRoute,
   } as any)
 const ProjectPProjectIdCandidateKeywordsRoute =
@@ -404,6 +429,7 @@ export interface FileRoutesByFullPath {
   '/.well-known/openai-apps-challenge': typeof Char91DotwellKnownChar93OpenaiAppsChallengeRoute
   '/ai': typeof AppAiRoute
   '/billing': typeof AppBillingRoute
+  '/learnings': typeof AppLearningsRouteWithChildren
   '/opportunities': typeof AppOpportunitiesRoute
   '/projects': typeof AppProjectsRoute
   '/settings': typeof AppSettingsRouteWithChildren
@@ -419,11 +445,13 @@ export interface FileRoutesByFullPath {
   '/p/$projectId': typeof ProjectPProjectIdRouteRouteWithChildren
   '/help/dataforseo-api-key': typeof AppHelpDataforseoApiKeyRoute
   '/help/openrouter-api-key': typeof AppHelpOpenrouterApiKeyRoute
+  '/learnings/$slug': typeof AppLearningsSlugRoute
   '/settings/organization': typeof AppSettingsOrganizationRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/autumn/$': typeof ApiAutumnSplatRoute
   '/s/$token/og.png': typeof STokenOgDotpngRoute
   '/s/$token/raw': typeof STokenRawRoute
+  '/learnings/': typeof AppLearningsIndexRoute
   '/settings/': typeof AppSettingsIndexRoute
   '/onboarding/': typeof AuthenticatedOnboardingIndexRoute
   '/s/$token/': typeof STokenIndexRoute
@@ -431,6 +459,7 @@ export interface FileRoutesByFullPath {
   '/p/$projectId/backlinks': typeof ProjectPProjectIdBacklinksRoute
   '/p/$projectId/brand-lookup': typeof ProjectPProjectIdBrandLookupRoute
   '/p/$projectId/candidate-keywords': typeof ProjectPProjectIdCandidateKeywordsRoute
+  '/p/$projectId/content-ops': typeof ProjectPProjectIdContentOpsRoute
   '/p/$projectId/context': typeof ProjectPProjectIdContextRoute
   '/p/$projectId/domain': typeof ProjectPProjectIdDomainRoute
   '/p/$projectId/keywords': typeof ProjectPProjectIdKeywordsRoute
@@ -476,17 +505,20 @@ export interface FileRoutesByTo {
   '/r/$reportId': typeof RReportIdRoute
   '/help/dataforseo-api-key': typeof AppHelpDataforseoApiKeyRoute
   '/help/openrouter-api-key': typeof AppHelpOpenrouterApiKeyRoute
+  '/learnings/$slug': typeof AppLearningsSlugRoute
   '/settings/organization': typeof AppSettingsOrganizationRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/autumn/$': typeof ApiAutumnSplatRoute
   '/s/$token/og.png': typeof STokenOgDotpngRoute
   '/s/$token/raw': typeof STokenRawRoute
+  '/learnings': typeof AppLearningsIndexRoute
   '/settings': typeof AppSettingsIndexRoute
   '/onboarding': typeof AuthenticatedOnboardingIndexRoute
   '/s/$token': typeof STokenIndexRoute
   '/p/$projectId/backlinks': typeof ProjectPProjectIdBacklinksRoute
   '/p/$projectId/brand-lookup': typeof ProjectPProjectIdBrandLookupRoute
   '/p/$projectId/candidate-keywords': typeof ProjectPProjectIdCandidateKeywordsRoute
+  '/p/$projectId/content-ops': typeof ProjectPProjectIdContentOpsRoute
   '/p/$projectId/context': typeof ProjectPProjectIdContextRoute
   '/p/$projectId/domain': typeof ProjectPProjectIdDomainRoute
   '/p/$projectId/keywords': typeof ProjectPProjectIdKeywordsRoute
@@ -521,6 +553,7 @@ export interface FileRoutesById {
   '/.well-known/openai-apps-challenge': typeof Char91DotwellKnownChar93OpenaiAppsChallengeRoute
   '/_app/ai': typeof AppAiRoute
   '/_app/billing': typeof AppBillingRoute
+  '/_app/learnings': typeof AppLearningsRouteWithChildren
   '/_app/opportunities': typeof AppOpportunitiesRoute
   '/_app/projects': typeof AppProjectsRoute
   '/_app/settings': typeof AppSettingsRouteWithChildren
@@ -537,11 +570,13 @@ export interface FileRoutesById {
   '/_project/p/$projectId': typeof ProjectPProjectIdRouteRouteWithChildren
   '/_app/help/dataforseo-api-key': typeof AppHelpDataforseoApiKeyRoute
   '/_app/help/openrouter-api-key': typeof AppHelpOpenrouterApiKeyRoute
+  '/_app/learnings/$slug': typeof AppLearningsSlugRoute
   '/_app/settings/organization': typeof AppSettingsOrganizationRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/autumn/$': typeof ApiAutumnSplatRoute
   '/s/$token/og.png': typeof STokenOgDotpngRoute
   '/s/$token/raw': typeof STokenRawRoute
+  '/_app/learnings/': typeof AppLearningsIndexRoute
   '/_app/settings/': typeof AppSettingsIndexRoute
   '/_authenticated/onboarding/': typeof AuthenticatedOnboardingIndexRoute
   '/s/$token/': typeof STokenIndexRoute
@@ -549,6 +584,7 @@ export interface FileRoutesById {
   '/_project/p/$projectId/backlinks': typeof ProjectPProjectIdBacklinksRoute
   '/_project/p/$projectId/brand-lookup': typeof ProjectPProjectIdBrandLookupRoute
   '/_project/p/$projectId/candidate-keywords': typeof ProjectPProjectIdCandidateKeywordsRoute
+  '/_project/p/$projectId/content-ops': typeof ProjectPProjectIdContentOpsRoute
   '/_project/p/$projectId/context': typeof ProjectPProjectIdContextRoute
   '/_project/p/$projectId/domain': typeof ProjectPProjectIdDomainRoute
   '/_project/p/$projectId/keywords': typeof ProjectPProjectIdKeywordsRoute
@@ -583,6 +619,7 @@ export interface FileRouteTypes {
     | '/.well-known/openai-apps-challenge'
     | '/ai'
     | '/billing'
+    | '/learnings'
     | '/opportunities'
     | '/projects'
     | '/settings'
@@ -598,11 +635,13 @@ export interface FileRouteTypes {
     | '/p/$projectId'
     | '/help/dataforseo-api-key'
     | '/help/openrouter-api-key'
+    | '/learnings/$slug'
     | '/settings/organization'
     | '/api/auth/$'
     | '/api/autumn/$'
     | '/s/$token/og.png'
     | '/s/$token/raw'
+    | '/learnings/'
     | '/settings/'
     | '/onboarding/'
     | '/s/$token/'
@@ -610,6 +649,7 @@ export interface FileRouteTypes {
     | '/p/$projectId/backlinks'
     | '/p/$projectId/brand-lookup'
     | '/p/$projectId/candidate-keywords'
+    | '/p/$projectId/content-ops'
     | '/p/$projectId/context'
     | '/p/$projectId/domain'
     | '/p/$projectId/keywords'
@@ -655,17 +695,20 @@ export interface FileRouteTypes {
     | '/r/$reportId'
     | '/help/dataforseo-api-key'
     | '/help/openrouter-api-key'
+    | '/learnings/$slug'
     | '/settings/organization'
     | '/api/auth/$'
     | '/api/autumn/$'
     | '/s/$token/og.png'
     | '/s/$token/raw'
+    | '/learnings'
     | '/settings'
     | '/onboarding'
     | '/s/$token'
     | '/p/$projectId/backlinks'
     | '/p/$projectId/brand-lookup'
     | '/p/$projectId/candidate-keywords'
+    | '/p/$projectId/content-ops'
     | '/p/$projectId/context'
     | '/p/$projectId/domain'
     | '/p/$projectId/keywords'
@@ -699,6 +742,7 @@ export interface FileRouteTypes {
     | '/.well-known/openai-apps-challenge'
     | '/_app/ai'
     | '/_app/billing'
+    | '/_app/learnings'
     | '/_app/opportunities'
     | '/_app/projects'
     | '/_app/settings'
@@ -715,11 +759,13 @@ export interface FileRouteTypes {
     | '/_project/p/$projectId'
     | '/_app/help/dataforseo-api-key'
     | '/_app/help/openrouter-api-key'
+    | '/_app/learnings/$slug'
     | '/_app/settings/organization'
     | '/api/auth/$'
     | '/api/autumn/$'
     | '/s/$token/og.png'
     | '/s/$token/raw'
+    | '/_app/learnings/'
     | '/_app/settings/'
     | '/_authenticated/onboarding/'
     | '/s/$token/'
@@ -727,6 +773,7 @@ export interface FileRouteTypes {
     | '/_project/p/$projectId/backlinks'
     | '/_project/p/$projectId/brand-lookup'
     | '/_project/p/$projectId/candidate-keywords'
+    | '/_project/p/$projectId/content-ops'
     | '/_project/p/$projectId/context'
     | '/_project/p/$projectId/domain'
     | '/_project/p/$projectId/keywords'
@@ -922,6 +969,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppOpportunitiesRouteImport
       parentRoute: typeof AppRouteRoute
     }
+    '/_app/learnings': {
+      id: '/_app/learnings'
+      path: '/learnings'
+      fullPath: '/learnings'
+      preLoaderRoute: typeof AppLearningsRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
     '/_app/billing': {
       id: '/_app/billing'
       path: '/billing'
@@ -964,6 +1018,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSettingsIndexRouteImport
       parentRoute: typeof AppSettingsRoute
     }
+    '/_app/learnings/': {
+      id: '/_app/learnings/'
+      path: '/'
+      fullPath: '/learnings/'
+      preLoaderRoute: typeof AppLearningsIndexRouteImport
+      parentRoute: typeof AppLearningsRoute
+    }
     '/s/$token/raw': {
       id: '/s/$token/raw'
       path: '/s/$token/raw'
@@ -998,6 +1059,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/settings/organization'
       preLoaderRoute: typeof AppSettingsOrganizationRouteImport
       parentRoute: typeof AppSettingsRoute
+    }
+    '/_app/learnings/$slug': {
+      id: '/_app/learnings/$slug'
+      path: '/$slug'
+      fullPath: '/learnings/$slug'
+      preLoaderRoute: typeof AppLearningsSlugRouteImport
+      parentRoute: typeof AppLearningsRoute
     }
     '/_app/help/openrouter-api-key': {
       id: '/_app/help/openrouter-api-key'
@@ -1104,6 +1172,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProjectPProjectIdContextRouteImport
       parentRoute: typeof ProjectPProjectIdRouteRoute
     }
+    '/_project/p/$projectId/content-ops': {
+      id: '/_project/p/$projectId/content-ops'
+      path: '/content-ops'
+      fullPath: '/p/$projectId/content-ops'
+      preLoaderRoute: typeof ProjectPProjectIdContentOpsRouteImport
+      parentRoute: typeof ProjectPProjectIdRouteRoute
+    }
     '/_project/p/$projectId/candidate-keywords': {
       id: '/_project/p/$projectId/candidate-keywords'
       path: '/candidate-keywords'
@@ -1205,6 +1280,20 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AppLearningsRouteChildren {
+  AppLearningsSlugRoute: typeof AppLearningsSlugRoute
+  AppLearningsIndexRoute: typeof AppLearningsIndexRoute
+}
+
+const AppLearningsRouteChildren: AppLearningsRouteChildren = {
+  AppLearningsSlugRoute: AppLearningsSlugRoute,
+  AppLearningsIndexRoute: AppLearningsIndexRoute,
+}
+
+const AppLearningsRouteWithChildren = AppLearningsRoute._addFileChildren(
+  AppLearningsRouteChildren,
+)
+
 interface AppSettingsRouteChildren {
   AppSettingsOrganizationRoute: typeof AppSettingsOrganizationRoute
   AppSettingsIndexRoute: typeof AppSettingsIndexRoute
@@ -1222,6 +1311,7 @@ const AppSettingsRouteWithChildren = AppSettingsRoute._addFileChildren(
 interface AppRouteRouteChildren {
   AppAiRoute: typeof AppAiRoute
   AppBillingRoute: typeof AppBillingRoute
+  AppLearningsRoute: typeof AppLearningsRouteWithChildren
   AppOpportunitiesRoute: typeof AppOpportunitiesRoute
   AppProjectsRoute: typeof AppProjectsRoute
   AppSettingsRoute: typeof AppSettingsRouteWithChildren
@@ -1235,6 +1325,7 @@ interface AppRouteRouteChildren {
 const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppAiRoute: AppAiRoute,
   AppBillingRoute: AppBillingRoute,
+  AppLearningsRoute: AppLearningsRouteWithChildren,
   AppOpportunitiesRoute: AppOpportunitiesRoute,
   AppProjectsRoute: AppProjectsRoute,
   AppSettingsRoute: AppSettingsRouteWithChildren,
@@ -1309,6 +1400,7 @@ interface ProjectPProjectIdRouteRouteChildren {
   ProjectPProjectIdBacklinksRoute: typeof ProjectPProjectIdBacklinksRoute
   ProjectPProjectIdBrandLookupRoute: typeof ProjectPProjectIdBrandLookupRoute
   ProjectPProjectIdCandidateKeywordsRoute: typeof ProjectPProjectIdCandidateKeywordsRoute
+  ProjectPProjectIdContentOpsRoute: typeof ProjectPProjectIdContentOpsRoute
   ProjectPProjectIdContextRoute: typeof ProjectPProjectIdContextRoute
   ProjectPProjectIdDomainRoute: typeof ProjectPProjectIdDomainRoute
   ProjectPProjectIdKeywordsRoute: typeof ProjectPProjectIdKeywordsRoute
@@ -1331,6 +1423,7 @@ const ProjectPProjectIdRouteRouteChildren: ProjectPProjectIdRouteRouteChildren =
     ProjectPProjectIdBrandLookupRoute: ProjectPProjectIdBrandLookupRoute,
     ProjectPProjectIdCandidateKeywordsRoute:
       ProjectPProjectIdCandidateKeywordsRoute,
+    ProjectPProjectIdContentOpsRoute: ProjectPProjectIdContentOpsRoute,
     ProjectPProjectIdContextRoute: ProjectPProjectIdContextRoute,
     ProjectPProjectIdDomainRoute: ProjectPProjectIdDomainRoute,
     ProjectPProjectIdKeywordsRoute: ProjectPProjectIdKeywordsRoute,
