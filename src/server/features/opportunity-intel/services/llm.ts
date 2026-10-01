@@ -1,6 +1,9 @@
 import { generateObject } from "ai";
 import type { z } from "zod";
-import { getStructuredLlmModel } from "@/server/lib/openrouter";
+import {
+  getStructuredLlmModel,
+  withJsonSchemaInstruction,
+} from "@/server/lib/openrouter";
 import { OpportunityIntelError } from "../opportunityIntelErrors";
 import type { CostEndpoint } from "../rules/scoringRules";
 import { checkDailyBudget, recordCostEvent } from "./costs";
@@ -68,7 +71,7 @@ export async function runOpportunityLlm<Schema extends z.ZodType>(input: {
       const result = await generateObject({
         model,
         schema: input.schema,
-        system: input.system,
+        system: withJsonSchemaInstruction(input.system, input.schema),
         prompt: input.prompt,
       });
       // generateObject's conditional return type doesn't unify with z.infer

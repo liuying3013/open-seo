@@ -1,3 +1,4 @@
+import { z } from "zod";
 import {
   createOpenRouter,
   type LanguageModelV3,
@@ -34,8 +35,12 @@ export function buildChatAgentModel(
   apiKey: string,
   modelId?: string,
   reasoningEffort: "max" | "low" = "max",
+  baseUrl?: string,
 ): LanguageModelV3 {
   const model = modelId ?? DEFAULT_CHAT_AGENT_MODEL;
+  // An OpenAI-compatible relay (OPENROUTER_BASE_URL) gets a plain request:
+  // strict gateways reject OpenRouter's usage/provider/reasoning extensions.
+  if (baseUrl) return createOpenRouter({ apiKey, baseURL: baseUrl })(model);
   const openrouter = createOpenRouter({ apiKey });
 
   // MiniMax M3 (env-override path only): `provider.order` prefers Together,
@@ -65,21 +70,28 @@ export function buildChatAgentModel(
 }
 
 /**
- * Model for server-side structured generation (opportunity-intel). Reads the
- * key/model from env like the SAM agent, at low reasoning effort since these
- * are classification calls. An optional OPENROUTER_BASE_URL points at an
- * OpenAI-compatible relay: that skips the OpenRouter-specific request
- * extensions (usage accounting, provider routing, ZDR) because strict
- * gateways reject unknown body fields.
+ * OpenAI-compatible relays (OPENROUTER_BASE_URL) can ignore `response_format`,
+ * so the model answers in prose unless the prompt asks for JSON. Spelling the
+ * schema out in the system prompt keeps generateObject parseable there, and is
+ * harmless where structured outputs are enforced.
+ */
+export function withJsonSchemaInstruction(
+  system: string,
+  schema: z.ZodType,
+): string {
+  return `${system}\n\nRespond with only a JSON object that matches this JSON Schema, with no prose or code fences:\n${JSON.stringify(z.toJSONSchema(schema))}`;
+}
+
+/**
+ * Model for server-side structured generation (opportunity-intel, content-ops).
+ * Reads the key/model/relay from env like the SAM agent, at low reasoning
+ * effort since these are classification calls.
  */
 export async function getStructuredLlmModel(): Promise<LanguageModelV3> {
-  const apiKey = await getRequiredEnvValue("OPENROUTER_API_KEY");
-  const modelId = await getOptionalEnvValue("OPENROUTER_MODEL");
-  const baseUrl = await getOptionalEnvValue("OPENROUTER_BASE_URL");
-  if (baseUrl) {
-    return createOpenRouter({ apiKey, baseURL: baseUrl })(
-      modelId ?? DEFAULT_CHAT_AGENT_MODEL,
-    );
-  }
-  return buildChatAgentModel(apiKey, modelId, "low");
+  return buildChatAgentModel(
+    await getRequiredEnvValue("OPENROUTER_API_KEY"),
+    await getOptionalEnvValue("OPENROUTER_MODEL"),
+    "low",
+    await getOptionalEnvValue("OPENROUTER_BASE_URL"),
+  );
 }
