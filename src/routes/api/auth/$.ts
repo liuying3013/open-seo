@@ -12,6 +12,12 @@ const LOCAL_PASSWORD_ENDPOINTS = new Set([
   "/api/auth/revoke-sessions",
   "/api/auth/revoke-other-sessions",
   "/api/auth/change-password",
+  // API key management for MCP clients. The apiKey plugin requires a session
+  // for each of these; keys themselves are only accepted on /mcp.
+  "/api/auth/api-key/create",
+  "/api/auth/api-key/list",
+  "/api/auth/api-key/update",
+  "/api/auth/api-key/delete",
 ]);
 
 export async function handleAuthRequest(request: Request) {

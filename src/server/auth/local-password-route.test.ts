@@ -33,6 +33,17 @@ describe("local password auth endpoints", () => {
     expect(response.status).toBe(404);
     expect(mocks.handler).not.toHaveBeenCalled();
   });
+  it.each(["create", "list", "update", "delete"])(
+    "allows api-key/%s",
+    async (action) => {
+      await handleAuthRequest(
+        new Request(`http://localhost/api/auth/api-key/${action}`, {
+          method: "POST",
+        }),
+      );
+      expect(mocks.handler).toHaveBeenCalledTimes(1);
+    },
+  );
   it("uses a shared rate-limit bucket regardless of supplied IP headers", async () => {
     await handleAuthRequest(
       new Request("http://localhost/api/auth/sign-in/email", {

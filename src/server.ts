@@ -15,6 +15,7 @@ import {
   createOpenSeoOAuthProvider,
   type OpenSeoOAuthEnv,
 } from "@/server/mcp/oauth-provider";
+import { handleLocalPasswordMcpRequest } from "@/server/mcp/api-key-auth";
 import { requestWithPublicOrigin } from "@/server/mcp/public-origin";
 import { MCP_ROUTE } from "@/server/mcp/context";
 import { handleSelfHostedOpenSeoMcpRequest } from "@/server/mcp/transport";
@@ -170,6 +171,10 @@ function handleFetch(
     pathname === MCP_ROUTE
   ) {
     return handleSelfHostedOpenSeoMcpRequest(publicRequest, authMode, env, ctx);
+  }
+
+  if (authMode === "local_password" && pathname === MCP_ROUTE) {
+    return handleLocalPasswordMcpRequest(publicRequest, env, ctx);
   }
 
   return appFetch(request);
