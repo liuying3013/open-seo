@@ -19,6 +19,7 @@ import { switchOrganization } from "@/serverFunctions/organization";
 import {
   connectNavGroup,
   discoverNavGroup,
+  portfolioNavGroup,
   getProjectNavGroups,
 } from "@/client/navigation/items";
 import { ProjectSwitcher } from "@/client/features/projects/ProjectSwitcher";
@@ -87,8 +88,8 @@ function SidebarNavLink({
 
 export function Sidebar({ projectId, onNavigate, onClose }: SidebarProps) {
   const navGroups = projectId
-    ? [...getProjectNavGroups(projectId), discoverNavGroup]
-    : [discoverNavGroup, connectNavGroup];
+    ? [...getProjectNavGroups(projectId), portfolioNavGroup, discoverNavGroup]
+    : [portfolioNavGroup, discoverNavGroup, connectNavGroup];
   const navigate = useNavigate();
   const location = useLocation();
   const onSamRoute = location.pathname.includes("/sam");

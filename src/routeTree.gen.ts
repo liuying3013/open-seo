@@ -27,6 +27,7 @@ import { Route as AuthSignUpRouteImport } from './routes/_auth.sign-up'
 import { Route as AuthSignInRouteImport } from './routes/_auth.sign-in'
 import { Route as AppTeamRouteImport } from './routes/_app/team'
 import { Route as AppSupportRouteImport } from './routes/_app/support'
+import { Route as AppSitesRouteImport } from './routes/_app/sites'
 import { Route as AppSettingsRouteImport } from './routes/_app/settings'
 import { Route as AppProjectsRouteImport } from './routes/_app/projects'
 import { Route as AppOpportunitiesRouteImport } from './routes/_app/opportunities'
@@ -160,6 +161,11 @@ const AppTeamRoute = AppTeamRouteImport.update({
 const AppSupportRoute = AppSupportRouteImport.update({
   id: '/support',
   path: '/support',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppSitesRoute = AppSitesRouteImport.update({
+  id: '/sites',
+  path: '/sites',
   getParentRoute: () => AppRouteRoute,
 } as any)
 const AppSettingsRoute = AppSettingsRouteImport.update({
@@ -433,6 +439,7 @@ export interface FileRoutesByFullPath {
   '/opportunities': typeof AppOpportunitiesRoute
   '/projects': typeof AppProjectsRoute
   '/settings': typeof AppSettingsRouteWithChildren
+  '/sites': typeof AppSitesRoute
   '/support': typeof AppSupportRoute
   '/team': typeof AppTeamRoute
   '/sign-in': typeof AuthSignInRoute
@@ -494,6 +501,7 @@ export interface FileRoutesByTo {
   '/billing': typeof AppBillingRoute
   '/opportunities': typeof AppOpportunitiesRoute
   '/projects': typeof AppProjectsRoute
+  '/sites': typeof AppSitesRoute
   '/support': typeof AppSupportRoute
   '/team': typeof AppTeamRoute
   '/sign-in': typeof AuthSignInRoute
@@ -557,6 +565,7 @@ export interface FileRoutesById {
   '/_app/opportunities': typeof AppOpportunitiesRoute
   '/_app/projects': typeof AppProjectsRoute
   '/_app/settings': typeof AppSettingsRouteWithChildren
+  '/_app/sites': typeof AppSitesRoute
   '/_app/support': typeof AppSupportRoute
   '/_app/team': typeof AppTeamRoute
   '/_auth/sign-in': typeof AuthSignInRoute
@@ -623,6 +632,7 @@ export interface FileRouteTypes {
     | '/opportunities'
     | '/projects'
     | '/settings'
+    | '/sites'
     | '/support'
     | '/team'
     | '/sign-in'
@@ -684,6 +694,7 @@ export interface FileRouteTypes {
     | '/billing'
     | '/opportunities'
     | '/projects'
+    | '/sites'
     | '/support'
     | '/team'
     | '/sign-in'
@@ -746,6 +757,7 @@ export interface FileRouteTypes {
     | '/_app/opportunities'
     | '/_app/projects'
     | '/_app/settings'
+    | '/_app/sites'
     | '/_app/support'
     | '/_app/team'
     | '/_auth/sign-in'
@@ -946,6 +958,13 @@ declare module '@tanstack/react-router' {
       path: '/support'
       fullPath: '/support'
       preLoaderRoute: typeof AppSupportRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/_app/sites': {
+      id: '/_app/sites'
+      path: '/sites'
+      fullPath: '/sites'
+      preLoaderRoute: typeof AppSitesRouteImport
       parentRoute: typeof AppRouteRoute
     }
     '/_app/settings': {
@@ -1315,6 +1334,7 @@ interface AppRouteRouteChildren {
   AppOpportunitiesRoute: typeof AppOpportunitiesRoute
   AppProjectsRoute: typeof AppProjectsRoute
   AppSettingsRoute: typeof AppSettingsRouteWithChildren
+  AppSitesRoute: typeof AppSitesRoute
   AppSupportRoute: typeof AppSupportRoute
   AppTeamRoute: typeof AppTeamRoute
   AppIndexRoute: typeof AppIndexRoute
@@ -1329,6 +1349,7 @@ const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppOpportunitiesRoute: AppOpportunitiesRoute,
   AppProjectsRoute: AppProjectsRoute,
   AppSettingsRoute: AppSettingsRouteWithChildren,
+  AppSitesRoute: AppSitesRoute,
   AppSupportRoute: AppSupportRoute,
   AppTeamRoute: AppTeamRoute,
   AppIndexRoute: AppIndexRoute,
@@ -1513,6 +1534,7 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
 
 import type { getRouter } from './router.tsx'
 import type { startInstance } from './start.ts'

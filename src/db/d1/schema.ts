@@ -7,6 +7,7 @@ export * from "../content-factory.schema";
 export * from "../content-ops.schema";
 export * from "../opportunity-intel.schema";
 export * from "../project-context.schema";
+export * from "../project-sites.schema";
 export * from "../reports.schema";
 export * from "../report-templates.schema";
 export * from "../audit.schema";

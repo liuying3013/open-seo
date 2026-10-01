@@ -11,6 +11,7 @@ import {
   Link2,
   ListChecks,
   MessageSquare,
+  Network,
   Search,
   Sparkles,
   Telescope,
@@ -109,6 +110,12 @@ const opportunitiesNavItem = linkOptions({
   icon: Telescope,
 });
 
+const sitesNavItem = linkOptions({
+  to: "/sites" as const,
+  label: "站点总览",
+  icon: Network,
+});
+
 const learningsNavItem = linkOptions({
   to: "/learnings" as const,
   label: "学习文档",
@@ -120,6 +127,12 @@ const learningsNavItem = linkOptions({
 export const discoverNavGroup = {
   label: "Discover",
   items: [opportunitiesNavItem, learningsNavItem],
+};
+
+// Cross-project site registry: repos, hosting, templates, markets.
+export const portfolioNavGroup = {
+  label: "Portfolio",
+  items: [sitesNavItem],
 };
 
 // Shown only when no project is selected; with a project, Agent setup lives in

@@ -38,6 +38,10 @@ import {
 import { createProjectTool } from "@/server/mcp/tools/create-project";
 import { listProjectsTool } from "@/server/mcp/tools/list-projects";
 import {
+  listSitesTool,
+  upsertSiteRegistryTool,
+} from "@/server/mcp/tools/site-registry";
+import {
   getProjectContextTool,
   updateProjectContextTool,
 } from "@/server/mcp/tools/project-context";
@@ -233,6 +237,8 @@ export function createOpenSeoMcpServer(authProps: McpProps) {
   register(whoamiTool);
   register(listProjectsTool);
   register(createProjectTool);
+  register(listSitesTool);
+  register(upsertSiteRegistryTool);
   register(getProjectContextTool);
   register(updateProjectContextTool);
   register(listSavedKeywordsTool);

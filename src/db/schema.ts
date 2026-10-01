@@ -5,6 +5,7 @@ import * as sqliteContentFactory from "./content-factory.schema";
 import * as sqliteContentOps from "./content-ops.schema";
 import * as sqliteOpportunityIntel from "./opportunity-intel.schema";
 import * as sqliteProjectContext from "./project-context.schema";
+import * as sqliteProjectSites from "./project-sites.schema";
 import * as sqliteReports from "./reports.schema";
 import * as sqliteReportTemplates from "./report-templates.schema";
 import * as sqliteAudit from "./audit.schema";
@@ -20,6 +21,7 @@ import * as pgContentFactory from "./pg/content-factory.schema";
 import * as pgContentOps from "./pg/content-ops.schema";
 import * as pgOpportunityIntel from "./pg/opportunity-intel.schema";
 import * as pgProjectContext from "./pg/project-context.schema";
+import * as pgProjectSites from "./pg/project-sites.schema";
 import * as pgReports from "./pg/reports.schema";
 import * as pgReportTemplates from "./pg/report-templates.schema";
 import * as pgAudit from "./pg/audit.schema";
@@ -46,6 +48,7 @@ type AppSchema = typeof sqliteApp &
   typeof sqliteContentOps &
   typeof sqliteOpportunityIntel &
   typeof sqliteProjectContext &
+  typeof sqliteProjectSites &
   typeof sqliteReports &
   typeof sqliteReportTemplates &
   typeof sqliteAudit &
@@ -65,6 +68,7 @@ const runtimeSchema =
         ...pgContentOps,
         ...pgOpportunityIntel,
         ...pgProjectContext,
+        ...pgProjectSites,
         ...pgReports,
         ...pgReportTemplates,
         ...pgAudit,
@@ -82,6 +86,7 @@ const runtimeSchema =
         ...sqliteContentOps,
         ...sqliteOpportunityIntel,
         ...sqliteProjectContext,
+        ...sqliteProjectSites,
         ...sqliteReports,
         ...sqliteReportTemplates,
         ...sqliteAudit,
@@ -143,6 +148,8 @@ export const {
   projectCompetitors,
   projectKeyPages,
   projectResearchLog,
+  projectSites,
+  projectMarkets,
   reports,
   reportTemplates,
   audits,
