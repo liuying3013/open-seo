@@ -81,16 +81,16 @@ function lengthCheck(
 ): CheckResult {
   const length = value.trim().length;
   if (length === 0) {
-    return { id, level: "blocking", message: `${label} is empty.` };
+    return { id, level: "blocking", message: `${label}为空。` };
   }
   if (length < min || length > max) {
     return {
       id,
       level: "warning",
-      message: `${label} is ${length} characters; aim for ${min}-${max}.`,
+      message: `${label}长 ${length} 个字符，建议 ${min}–${max}。`,
     };
   }
-  return { id, level: "pass", message: `${label} is ${length} characters.` };
+  return { id, level: "pass", message: `${label}长 ${length} 个字符。` };
 }
 
 function h1Check(body: string): CheckResult {
@@ -99,7 +99,7 @@ function h1Check(body: string): CheckResult {
     return {
       id: "h1",
       level: "pass",
-      message: "The title is the only H1.",
+      message: "标题是唯一的 H1。",
     };
   }
   if (h1Count === 1) {
@@ -113,7 +113,7 @@ function h1Check(body: string): CheckResult {
   return {
     id: "h1",
     level: "blocking",
-    message: `The body has ${h1Count} H1 headings; a page needs exactly one.`,
+    message: `正文有 ${h1Count} 个 H1，一个页面只能有一个。`,
   };
 }
 
@@ -124,7 +124,7 @@ function headingOrderCheck(body: string): CheckResult {
       return {
         id: "heading_order",
         level: "warning",
-        message: `Heading level jumps from H${levels[i - 1]} to H${levels[i]}.`,
+        message: `标题层级从 H${levels[i - 1]} 跳到了 H${levels[i]}。`,
       };
     }
   }
@@ -134,13 +134,13 @@ function headingOrderCheck(body: string): CheckResult {
     return {
       id: "heading_order",
       level: "warning",
-      message: `The first body heading is H${first}; expected H2.`,
+      message: `正文第一个小标题是 H${first}，应为 H2。`,
     };
   }
   return {
     id: "heading_order",
     level: "pass",
-    message: "Heading levels do not skip.",
+    message: "标题层级没有跳级。",
   };
 }
 
@@ -155,7 +155,7 @@ function internalLinkCheck(draft: ContentDraft, context: CheckContext) {
     return {
       id: "internal_links",
       level: "unchecked",
-      message: "The site page inventory is not connected yet.",
+      message: "该站点的页面清单还没导入，无法检查内部链接。",
     } satisfies CheckResult;
   }
   const known = context.knownPageUrls;
@@ -168,12 +168,12 @@ function internalLinkCheck(draft: ContentDraft, context: CheckContext) {
     ? ({
         id: "internal_links",
         level: "pass",
-        message: `${urls.size} internal links all exist on the site.`,
+        message: `${urls.size} 个内部链接都指向站内现有页面。`,
       } satisfies CheckResult)
     : ({
         id: "internal_links",
         level: "warning",
-        message: `Internal links not found on the site: ${missing.join(", ")}.`,
+        message: `这些内部链接在站内找不到：${missing.join("、")}。`,
       } satisfies CheckResult);
 }
 
@@ -190,14 +190,13 @@ function imageAltCheck(body: string): CheckResult {
     return {
       id: "image_alt",
       level: "warning",
-      message: `${missing} of ${total} images have no alt text.`,
+      message: `${total} 张图片中有 ${missing} 张缺少 alt 文字。`,
     };
   }
   return {
     id: "image_alt",
     level: "pass",
-    message:
-      total === 0 ? "No images in the body." : "All images have alt text.",
+    message: total === 0 ? "正文没有图片。" : "所有图片都有 alt 文字。",
   };
 }
 
@@ -207,7 +206,7 @@ function prohibitedClaimsCheck(draft: ContentDraft, context: CheckContext) {
     return {
       id: "prohibited_claims",
       level: "unchecked",
-      message: "No evidence pack with prohibited claims for this cluster.",
+      message: "该选题簇没有带禁止声明的证据包，未检查。",
     } satisfies CheckResult;
   }
   const haystack = [draft.title, draft.metaDescription, draft.body, draft.cta]
@@ -220,12 +219,12 @@ function prohibitedClaimsCheck(draft: ContentDraft, context: CheckContext) {
     ? ({
         id: "prohibited_claims",
         level: "pass",
-        message: "No prohibited claim appears verbatim.",
+        message: "没有出现禁止声明的原文。",
       } satisfies CheckResult)
     : ({
         id: "prohibited_claims",
         level: "blocking",
-        message: `Prohibited claims found: ${hits.join("; ")}.`,
+        message: `出现了禁止声明：${hits.join("；")}。`,
       } satisfies CheckResult);
 }
 
@@ -236,7 +235,7 @@ function structuredDataCheck(draft: ContentDraft): CheckResult {
     return {
       id: "structured_data",
       level: "pass",
-      message: "No structured data declared.",
+      message: "没有声明结构化数据。",
     };
   }
   const text = stripCode(draft.body);
@@ -246,13 +245,12 @@ function structuredDataCheck(draft: ContentDraft): CheckResult {
       ? {
           id: "structured_data",
           level: "pass",
-          message: "FAQPage has visible questions.",
+          message: "FAQPage：正文里有可见的问题。",
         }
       : {
           id: "structured_data",
           level: "blocking",
-          message:
-            "FAQPage is declared but the body has fewer than 2 questions.",
+          message: "声明了 FAQPage，但正文里的问题少于 2 个。",
         };
   }
   if (type === "HowTo") {
@@ -260,18 +258,18 @@ function structuredDataCheck(draft: ContentDraft): CheckResult {
       ? {
           id: "structured_data",
           level: "pass",
-          message: "HowTo has visible numbered steps.",
+          message: "HowTo：正文里有可见的编号步骤。",
         }
       : {
           id: "structured_data",
           level: "blocking",
-          message: "HowTo is declared but the body has no numbered steps.",
+          message: "声明了 HowTo，但正文里没有编号步骤。",
         };
   }
   return {
     id: "structured_data",
     level: "unchecked",
-    message: `No existence check for ${type}.`,
+    message: `暂不支持检查 ${type} 类型。`,
   };
 }
 
@@ -281,13 +279,13 @@ export function runContentChecks(
 ): ChecksReport {
   const bodyCheck: CheckResult =
     draft.body.trim() === ""
-      ? { id: "body", level: "blocking", message: "The body is empty." }
-      : { id: "body", level: "pass", message: "The body has content." };
+      ? { id: "body", level: "blocking", message: "正文为空。" }
+      : { id: "body", level: "pass", message: "正文有内容。" };
   const checks = [
-    lengthCheck("title_length", "Title", draft.title, TITLE_RANGE),
+    lengthCheck("title_length", "标题", draft.title, TITLE_RANGE),
     lengthCheck(
       "description_length",
-      "Meta description",
+      "元描述",
       draft.metaDescription,
       DESCRIPTION_RANGE,
     ),
@@ -328,7 +326,7 @@ export function parseChecksReport(json: string): ChecksReport {
   }
   return {
     checks: [
-      { id: "report", level: "blocking", message: "Checks report unreadable." },
+      { id: "report", level: "blocking", message: "检查报告无法读取。" },
     ],
     blocking: 1,
     warnings: 0,
