@@ -1,9 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { pickSyncProjectId } from "./keywordSyncPick";
 
-const defaultProject = { id: "proj_default", domain: null };
-const helmet = { id: "proj_helmet", domain: "helmetclean.example" };
-const other = { id: "proj_other", domain: "other.example" };
+const defaultProject = { id: "proj_default", name: "Default", domain: null };
+const helmet = {
+  id: "proj_helmet",
+  name: "Helmet",
+  domain: "helmetclean.example",
+};
+const other = { id: "proj_other", name: "Other", domain: "other.example" };
+const workspace = { id: "proj_research", name: "B2B research", domain: null };
 
 describe("pickSyncProjectId", () => {
   it("prefers the graduated project when it is still live", () => {
@@ -34,6 +39,16 @@ describe("pickSyncProjectId", () => {
         projects: [helmet, defaultProject],
       }),
     ).toBe(helmet.id);
+  });
+
+  it("prefers a domainless research workspace over a site project", () => {
+    expect(
+      pickSyncProjectId({
+        graduatedProjectId: null,
+        lastLoggedProjectId: null,
+        projects: [helmet, workspace, defaultProject],
+      }),
+    ).toBe(workspace.id);
   });
 
   it("falls back to the only project, even without a domain", () => {
