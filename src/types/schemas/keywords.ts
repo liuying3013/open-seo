@@ -58,6 +58,22 @@ export const savedKeywordMetricSchema = z.object({
     .optional(),
 });
 
+// Content-ops provenance for saved and candidate keywords.
+export const keywordSourceSchema = z.enum([
+  "seed_expansion",
+  "competitor",
+  "gsc",
+  "paa",
+  "related",
+  "product_db",
+  "whatsapp",
+  "rfq",
+  "sales",
+  "manual",
+  "import",
+  "opportunity",
+]);
+
 export const saveKeywordsSchema = z
   .object({
     projectId: z.string().min(1),
@@ -67,6 +83,7 @@ export const saveKeywordsSchema = z
     tags: z.array(savedKeywordTagSchema).max(20).optional(),
     tagMode: z.enum(["append", "replace"]).optional(),
     metrics: z.array(savedKeywordMetricSchema).max(500).optional(),
+    source: keywordSourceSchema.optional(),
   })
   .refine(
     (value) => value.tagMode !== "replace" || (value.tags?.length ?? 0) > 0,
@@ -76,6 +93,23 @@ export const saveKeywordsSchema = z
 export const removeSavedKeywordsSchema = z.object({
   projectId: z.string().min(1),
   savedKeywordIds: z.array(z.string().min(1)).min(1).max(2000),
+});
+
+export const saveCandidateKeywordsSchema = z.object({
+  projectId: z.string().min(1),
+  keywords: z.array(z.string().min(1)).min(1).max(500),
+  locationCode: z.number().int().positive().optional(),
+  languageCode: z.string().min(2).max(8).optional(),
+  source: keywordSourceSchema.optional(),
+});
+
+export const getCandidateKeywordsSchema = z.object({
+  projectId: z.string().min(1),
+});
+
+export const removeCandidateKeywordsSchema = z.object({
+  projectId: z.string().min(1),
+  candidateKeywordIds: z.array(z.string().min(1)).min(1).max(2000),
 });
 
 export const getSavedKeywordsSchema = z.object({
@@ -153,6 +187,20 @@ export type ResolvedSaveKeywordsInput = Omit<
   ResolvedMarket;
 export type RemoveSavedKeywordsInput = z.infer<
   typeof removeSavedKeywordsSchema
+>;
+export type SaveCandidateKeywordsInput = z.infer<
+  typeof saveCandidateKeywordsSchema
+>;
+export type ResolvedSaveCandidateKeywordsInput = Omit<
+  SaveCandidateKeywordsInput,
+  keyof ResolvedMarket
+> &
+  ResolvedMarket;
+export type GetCandidateKeywordsInput = z.infer<
+  typeof getCandidateKeywordsSchema
+>;
+export type RemoveCandidateKeywordsInput = z.infer<
+  typeof removeCandidateKeywordsSchema
 >;
 export type GetSavedKeywordsInput = z.infer<typeof getSavedKeywordsSchema>;
 export type ExportSavedKeywordsInput = z.infer<

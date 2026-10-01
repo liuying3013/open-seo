@@ -80,7 +80,8 @@ export const projects = sqliteTable(
   ],
 );
 
-// User-saved keywords within a project. This is the canonical saved list.
+// Opportunity / research dump for a project. The curated shortlist lives in
+// candidate_keywords and is a separate menu.
 export const savedKeywords = sqliteTable(
   "saved_keywords",
   {
@@ -91,6 +92,9 @@ export const savedKeywords = sqliteTable(
     keyword: text("keyword").notNull(),
     locationCode: integer("location_code").notNull().default(2840),
     languageCode: text("language_code").notNull().default("en"),
+    // Where the keyword came from (content-ops provenance); null for keywords
+    // saved before this column existed.
+    source: text("source"),
     createdAt: text("created_at")
       .notNull()
       .default(sql`(current_timestamp)`),

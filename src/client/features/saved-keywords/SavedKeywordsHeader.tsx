@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import {
   ChevronDown,
   Download,
@@ -8,6 +9,7 @@ import {
 } from "lucide-react";
 
 export function SavedKeywordsHeader({
+  projectId,
   totalCount,
   exporting,
   metricsRefreshing,
@@ -15,6 +17,7 @@ export function SavedKeywordsHeader({
   onExportSheets,
   onRefreshMetrics,
 }: {
+  projectId: string;
   totalCount: number;
   exporting: "csv" | "sheets" | null;
   metricsRefreshing: boolean;
@@ -29,8 +32,15 @@ export function SavedKeywordsHeader({
       <div>
         <h1 className="text-2xl font-semibold">Saved Keywords</h1>
         <p className="text-sm text-base-content/70">
-          Save keyword ideas from research, organize them with tags, and revisit
-          when you&apos;re ready to act.
+          Opportunity and research dump. Curated shortlists belong in{" "}
+          <Link
+            to="/p/$projectId/candidate-keywords"
+            params={{ projectId }}
+            className="link link-hover"
+          >
+            Candidate Keywords
+          </Link>
+          .
         </p>
       </div>
 

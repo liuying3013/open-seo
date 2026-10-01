@@ -82,6 +82,7 @@ export async function saveKeywords(input: ResolvedSaveKeywordsInput) {
     keywords: normalizedKeywords,
     locationCode: input.locationCode,
     languageCode: input.languageCode,
+    source: input.source ?? null,
   });
   const savedKeywordIds = savedRows.map((row) => row.id);
 

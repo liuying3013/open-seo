@@ -119,6 +119,9 @@ async function saveKeywordsToProject(params: {
   keywords: string[];
   locationCode: number;
   languageCode: string;
+  // Content-ops provenance; existing rows keep their stored source (insert is
+  // onConflictDoNothing).
+  source?: string | null;
 }): Promise<SavedKeywordRecord[]> {
   if (params.keywords.length === 0) return [];
 
@@ -132,6 +135,7 @@ async function saveKeywordsToProject(params: {
           keyword,
           locationCode: params.locationCode,
           languageCode: params.languageCode,
+          source: params.source ?? null,
         })
         .onConflictDoNothing(),
     ),

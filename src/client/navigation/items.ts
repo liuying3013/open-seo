@@ -7,6 +7,7 @@ import {
   Globe,
   LayoutDashboard,
   Link2,
+  ListChecks,
   MessageSquare,
   Search,
   Sparkles,
@@ -33,6 +34,11 @@ const projectNavItems = [
     to: "/p/$projectId/saved" as const,
     label: "Saved Keywords",
     icon: Bookmark,
+  },
+  {
+    to: "/p/$projectId/candidate-keywords" as const,
+    label: "Candidate Keywords",
+    icon: ListChecks,
   },
   {
     to: "/p/$projectId/rank-tracking" as const,
@@ -134,6 +140,7 @@ export function getProjectNavGroups(projectId: string) {
         byPath("/p/$projectId/search-performance"),
         byPath("/p/$projectId/rank-tracking"),
         byPath("/p/$projectId/saved"),
+        byPath("/p/$projectId/candidate-keywords"),
         byPath("/p/$projectId/audit"),
       ],
     },

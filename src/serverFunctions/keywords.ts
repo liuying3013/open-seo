@@ -3,16 +3,24 @@ import {
   deleteSavedKeywordTagSchema,
   researchKeywordsSchema,
   saveKeywordsSchema,
+  saveCandidateKeywordsSchema,
+  getCandidateKeywordsSchema,
   getSavedKeywordsSchema,
   exportSavedKeywordsSchema,
+  removeCandidateKeywordsSchema,
   removeSavedKeywordsSchema,
   refreshSavedKeywordMetricsSchema,
   serpAnalysisSchema,
   updateSavedKeywordTagSchema,
   updateSavedKeywordTagsSchema,
 } from "@/types/schemas/keywords";
+import { CandidateKeywordsService } from "@/server/features/keywords/services/CandidateKeywordsService";
 import { KeywordResearchService } from "@/server/features/keywords/services/KeywordResearchService";
-import { requireProjectContext } from "@/serverFunctions/middleware";
+import { ProjectService } from "@/server/features/projects/services/ProjectService";
+import {
+  requireAuthenticatedContext,
+  requireProjectContext,
+} from "@/serverFunctions/middleware";
 import { resolveMarket } from "@/shared/keyword-locations";
 
 function shouldUseKeywordE2eFixtures() {
@@ -47,6 +55,48 @@ export const saveKeywords = createServerFn({ method: "POST" })
     return KeywordResearchService.saveKeywords({
       ...data,
       ...resolveMarket(data, context.project),
+      projectId: context.projectId,
+    });
+  });
+
+export const getCandidateKeywordCounts = createServerFn({ method: "POST" })
+  .middleware(requireAuthenticatedContext)
+  .handler(async ({ context }) => {
+    const projects = await ProjectService.listProjectsEnsuringOne(
+      context.organizationId,
+    );
+    return CandidateKeywordsService.countByProjectIds(
+      projects.map((project) => project.id),
+    );
+  });
+
+export const listCandidateKeywords = createServerFn({ method: "POST" })
+  .middleware(requireProjectContext)
+  .validator(getCandidateKeywordsSchema)
+  .handler(async ({ data, context }) => {
+    return CandidateKeywordsService.list({
+      ...data,
+      projectId: context.projectId,
+    });
+  });
+
+export const saveCandidateKeywords = createServerFn({ method: "POST" })
+  .middleware(requireProjectContext)
+  .validator(saveCandidateKeywordsSchema)
+  .handler(async ({ data, context }) => {
+    return CandidateKeywordsService.save({
+      ...data,
+      ...resolveMarket(data, context.project),
+      projectId: context.projectId,
+    });
+  });
+
+export const removeCandidateKeywords = createServerFn({ method: "POST" })
+  .middleware(requireProjectContext)
+  .validator(removeCandidateKeywordsSchema)
+  .handler(async ({ data, context }) => {
+    return CandidateKeywordsService.remove({
+      ...data,
       projectId: context.projectId,
     });
   });

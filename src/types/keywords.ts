@@ -38,6 +38,16 @@ export type SavedKeywordRow = {
   tags: SavedKeywordTag[];
 };
 
+export type CandidateKeywordRow = {
+  id: string;
+  projectId: string;
+  keyword: string;
+  locationCode: number;
+  languageCode: string;
+  source: string | null;
+  createdAt: string;
+};
+
 export type SavedKeywordTag = {
   id: string;
   name: string;

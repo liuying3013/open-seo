@@ -41,6 +41,7 @@ import {
   getProjectContextTool,
   updateProjectContextTool,
 } from "@/server/mcp/tools/project-context";
+import { listCandidateKeywordsTool } from "@/server/mcp/tools/list-candidate-keywords";
 import { listSavedKeywordsTool } from "@/server/mcp/tools/list-saved-keywords";
 import { removeSavedKeywordsTool } from "@/server/mcp/tools/remove-saved-keywords";
 import {
@@ -70,6 +71,7 @@ import {
   saveReportTemplateTool,
 } from "@/server/mcp/tools/report-template-tools";
 import { researchKeywordsTool } from "@/server/mcp/tools/research-keywords";
+import { saveCandidateKeywordsTool } from "@/server/mcp/tools/save-candidate-keywords";
 import { saveKeywordsTool } from "@/server/mcp/tools/save-keywords";
 import {
   getSearchConsolePerformanceTool,
@@ -183,9 +185,11 @@ export function createOpenSeoMcpServer(authProps: McpProps) {
   register(getProjectContextTool);
   register(updateProjectContextTool);
   register(listSavedKeywordsTool);
+  register(listCandidateKeywordsTool);
   register(removeSavedKeywordsTool);
   register(researchKeywordsTool);
   register(saveKeywordsTool);
+  register(saveCandidateKeywordsTool);
   register(getDomainOverviewTool);
   register(getDomainKeywordSuggestionsTool);
   register(getBacklinksOverviewTool);

@@ -10,7 +10,10 @@ import {
   locationCodeSchema,
   projectIdSchema,
 } from "@/server/mcp/schemas";
-import { savedKeywordMetricSchema } from "@/types/schemas/keywords";
+import {
+  keywordSourceSchema,
+  savedKeywordMetricSchema,
+} from "@/types/schemas/keywords";
 
 const inputSchema = {
   projectId: projectIdSchema,
@@ -41,6 +44,11 @@ const inputSchema = {
     ),
   locationCode: locationCodeSchema.optional(),
   languageCode: languageCodeSchema.optional(),
+  source: keywordSourceSchema
+    .optional()
+    .describe(
+      "Where these keywords came from (content-ops provenance), e.g. competitor, gsc, whatsapp, manual.",
+    ),
 } as const;
 
 type Args = z.infer<z.ZodObject<typeof inputSchema>>;
@@ -50,7 +58,7 @@ export const saveKeywordsTool = {
   config: {
     title: "Save keywords",
     description:
-      "Save keywords to a project's saved-keywords list. Uses no credits — does not call DataForSEO. Idempotent: re-saving an existing keyword is a no-op. If tags are provided, missing tags may be created. By default tags are appended; set tagMode=replace to remove existing tags from these saved keywords before applying the provided tags, which is useful for reorganizing keywords into page/topic clusters. Ask the user for confirmation before applying or replacing tags broadly.",
+      "Save keywords to a project's Saved Keywords list (the opportunity/research dump). Does not write to Candidate Keywords, which is the Content Ops shortlist — use save_candidate_keywords for that. Uses no credits — does not call DataForSEO. Idempotent: re-saving an existing keyword is a no-op. If tags are provided, missing tags may be created. By default tags are appended; set tagMode=replace to remove existing tags from these saved keywords before applying the provided tags, which is useful for reorganizing keywords into page/topic clusters. Ask the user for confirmation before applying or replacing tags broadly.",
     inputSchema,
     outputSchema: z.looseObject({
       projectId: z.string(),
@@ -83,6 +91,7 @@ export const saveKeywordsTool = {
       tagMode: args.tagMode ?? "append",
       locationCode,
       languageCode,
+      source: args.source,
     });
 
     const tagText =

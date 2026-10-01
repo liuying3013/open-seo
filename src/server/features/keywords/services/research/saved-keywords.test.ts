@@ -58,6 +58,7 @@ describe("saved keyword service", () => {
       keywords: ["technical seo", "content seo"],
       locationCode: 2840,
       languageCode: "en",
+      source: null,
     });
     expect(mocks.addTagsToSavedKeywords).toHaveBeenCalledWith({
       projectId: "project_1",
