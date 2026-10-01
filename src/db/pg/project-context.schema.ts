@@ -88,8 +88,8 @@ export const projectKeyPages = pgTable(
 );
 
 // What research has already been bought and what it concluded, so SAM and
-// Claude Code stop re-buying the same paid research. Pruned to 90 days on
-// append; the date is server-stamped, never supplied by the caller.
+// Claude Code stop re-buying the same paid research. Never pruned; the
+// date is server-stamped, never supplied by the caller.
 export const projectResearchLog = pgTable(
   "project_research_log",
   {

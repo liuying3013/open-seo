@@ -218,6 +218,13 @@
       "when": 1790842550131,
       "tag": "0030_short_toad_men",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1790843454490,
+      "tag": "0031_purple_gorilla_man",
+      "breakpoints": true
     }
   ]
 }

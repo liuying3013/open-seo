@@ -50,6 +50,9 @@ declare namespace Cloudflare {
     DUB_API_KEY?: string;
     // HMAC secret for the operator-only GDPR storage-erasure endpoint.
     GDPR_ERASURE_SECRET?: string;
+    // Bearer token for POST /api/internal/jobs/<job>, the host-scheduler
+    // trigger for background jobs. The endpoint is closed (404) when unset.
+    INTERNAL_JOBS_TOKEN?: string;
 
     // Cloudflare Turnstile — signup captcha (hosted only). Secret verifies
     // tokens server-side; site key is public and inlined into the client build.

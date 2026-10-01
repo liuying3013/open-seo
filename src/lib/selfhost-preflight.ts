@@ -269,12 +269,16 @@ export function runSelfhostPreflight(env: EnvRecord): PreflightResult {
         },
   );
 
+  // Docker runs no Cloudflare cron: rank-tracking schedules, the audit
+  // watchdog and retention sweeps only run when the host calls the internal
+  // jobs endpoint.
   items.push({
     key: "runtime",
-    name: "Scheduled checks",
+    name: "Scheduled jobs",
     level: "info",
-    message:
-      "Rank-tracking schedules do not run in Docker mode — trigger checks from the Rank Tracking page.",
+    message: get(env, "INTERNAL_JOBS_TOKEN")
+      ? "INTERNAL_JOBS_TOKEN is set — scheduled jobs only run when the host calls POST /api/internal/jobs/frequent (every 5 minutes) and /api/internal/jobs/daily (once a day). See docs/SELF_HOSTING_DOCKER.md."
+      : "Scheduled jobs (rank-tracking schedules, audit watchdog, retention sweeps) do not run in Docker mode. To run them, set INTERNAL_JOBS_TOKEN and call POST /api/internal/jobs/frequent every 5 minutes and /daily once a day from the host's cron — see docs/SELF_HOSTING_DOCKER.md. Rank checks can also be triggered from the Rank Tracking page.",
   });
 
   return { items, failed: items.some((item) => item.level === "fail") };

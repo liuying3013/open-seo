@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, inArray, lt, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
 import type { runBatch } from "@/db/runBatch";
 import {
@@ -255,17 +255,6 @@ function deleteResearchLogEntries(tx: Tx, projectId: string, ids: string[]) {
   );
 }
 
-function pruneResearchLogBefore(tx: Tx, projectId: string, entryDate: string) {
-  return tx
-    .delete(projectResearchLog)
-    .where(
-      and(
-        eq(projectResearchLog.projectId, projectId),
-        lt(projectResearchLog.entryDate, entryDate),
-      ),
-    );
-}
-
 export const ProjectContextRepository = {
   listSections,
   upsertSection,
@@ -279,5 +268,4 @@ export const ProjectContextRepository = {
   listResearchLog,
   appendResearchLogEntry,
   deleteResearchLogEntries,
-  pruneResearchLogBefore,
 } as const;

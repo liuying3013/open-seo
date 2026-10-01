@@ -14,7 +14,6 @@ import {
 // Project memory: the qualitative context SAM, MCP clients and the settings UI
 // share. Reading, writing and rendering it all go through here; the per-op
 // caps and normalization live in contextUpdateOps.
-const RESEARCH_LOG_RETENTION_DAYS = 90;
 const RESEARCH_LOG_LIMIT = 20;
 
 type ProjectContext = {
@@ -122,9 +121,8 @@ export async function getProjectContext(
   };
 }
 
-function dayStamp(offsetDays = 0): string {
-  const date = new Date(Date.now() + offsetDays * 24 * 60 * 60 * 1000);
-  return date.toISOString().slice(0, 10);
+function dayStamp(): string {
+  return new Date().toISOString().slice(0, 10);
 }
 
 /**
@@ -205,6 +203,7 @@ export async function applyContextUpdates(
             op.ids,
           );
         case "appendResearchLog":
+          // Entries are kept indefinitely; reads only show the newest ones.
           return [
             ProjectContextRepository.appendResearchLogEntry(tx, {
               projectId,
@@ -212,13 +211,6 @@ export async function applyContextUpdates(
               summary: op.summary,
               createdBy: updatedBy,
             }),
-            // The log only has to answer "was this bought recently?", so it
-            // is pruned on write instead of growing forever.
-            ProjectContextRepository.pruneResearchLogBefore(
-              tx,
-              projectId,
-              dayStamp(-RESEARCH_LOG_RETENTION_DAYS),
-            ),
           ];
       }
     }),
@@ -287,7 +279,7 @@ export function renderProjectContextMarkdown(context: ProjectContext): string {
 
   // The log is capped at the newest entries, so the heading counts what is
   // actually here — an agent deciding whether research is stale must not read
-  // a truncated list as the whole 90-day window.
+  // a truncated list as the whole history.
   pushSection(
     lines,
     context.researchLog.length === 0
@@ -300,10 +292,7 @@ export function renderProjectContextMarkdown(context: ProjectContext): string {
         (entry) => `- ${entry.entryDate}: ${entry.summary}`,
       ),
       ...(context.researchLog.length >= RESEARCH_LOG_LIMIT
-        ? [
-            "",
-            `_Older entries within the ${RESEARCH_LOG_RETENTION_DAYS}-day window are omitted._`,
-          ]
+        ? ["", "_Older entries are omitted._"]
         : []),
     ],
   );

@@ -17,7 +17,6 @@ const mocks = vi.hoisted(() => ({
   deleteKeyPages: vi.fn(),
   listResearchLog: vi.fn(),
   appendResearchLogEntry: vi.fn(),
-  pruneResearchLogBefore: vi.fn(),
   listTemplates: vi.fn(),
 }));
 
@@ -288,7 +287,7 @@ describe("project context service", () => {
       vi.useRealTimers();
     });
 
-    it("stamps the entry date server-side and prunes past 90 days", async () => {
+    it("stamps the entry date server-side and keeps older entries", async () => {
       await applyContextUpdates(
         "project_1",
         [{ appendResearchLog: { summary: "Keyword research. Verdict: go." } }],
@@ -304,12 +303,7 @@ describe("project context service", () => {
           createdBy: "sam",
         },
       );
-      expect(mocks.pruneResearchLogBefore).toHaveBeenCalledWith(
-        expect.anything(),
-        "project_1",
-        "2026-05-17",
-      );
-      // Both writes ride in the one atomic batch every apply goes through.
+      // The append rides in the one atomic batch every apply goes through.
       expect(runBatch).toHaveBeenCalledOnce();
     });
   });
@@ -340,7 +334,7 @@ describe("project context service", () => {
   });
 
   // A full log is a truncated log, and an agent judging whether research is
-  // stale must not read the newest 20 entries as the whole 90-day window.
+  // stale must not read the newest 20 entries as the whole history.
   it("says so when the research log is rendered at its limit", () => {
     const render = (entryCount: number) =>
       renderProjectContextMarkdown({
@@ -360,9 +354,7 @@ describe("project context service", () => {
 
     const atLimit = render(20);
     expect(atLimit).toContain("## Research log (20 entries)");
-    expect(atLimit).toContain(
-      "_Older entries within the 90-day window are omitted._",
-    );
+    expect(atLimit).toContain("_Older entries are omitted._");
     expect(render(1)).not.toContain("_Older entries");
   });
 });

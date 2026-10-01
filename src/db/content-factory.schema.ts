@@ -97,8 +97,8 @@ export const researchPages = sqliteTable(
 // contradictions nobody has resolved yet.
 //
 // project_context_sections is deliberately not extended for this: it stores
-// prose, and project_research_log is pruned at 90 days. Facts must outlive both
-// and carry per-claim provenance.
+// prose, and project_research_log is a dated log of conclusions. Facts need
+// per-claim provenance.
 // ============================================================================
 
 // One reusable claim. The four claim_types are kept apart on purpose: a

@@ -6,8 +6,6 @@ import { routeAgentRequest } from "agents";
 import { resolveUserContextFromHeaders } from "@/middleware/ensure-user/resolve";
 import { ProjectRepository } from "@/server/features/projects/repositories/ProjectRepository";
 import { SamSessionRepository } from "@/server/features/sam/SamSessionRepository";
-import { runScheduledRankChecks } from "@/server/features/rank-tracking/services/scheduledRankChecks";
-import { reconcileStaleAudits } from "@/server/features/audit/services/auditReconciler";
 import { getOrCreateOrganizationCustomer } from "@/server/billing/subscription";
 import { isHostedServerAuthMode } from "@/server/lib/runtime-env";
 import { getAuthMode, isHostedAuthMode } from "@/lib/auth-mode";
@@ -20,11 +18,11 @@ import { requestWithPublicOrigin } from "@/server/mcp/public-origin";
 import { MCP_ROUTE } from "@/server/mcp/context";
 import { handleSelfHostedOpenSeoMcpRequest } from "@/server/mcp/transport";
 import { withPgClient } from "@/db";
+import { runJob } from "@/server/jobs/runJob";
 import {
   AUTUMN_WEBHOOK_PATH,
   handleAutumnWebhookRequest,
 } from "@/server/billing/autumn-webhook";
-import { sweepDubReferredOrganizations } from "@/server/referrals/dub";
 import { maybeSendSelfHostHeartbeat } from "@/server/lib/self-host-telemetry";
 import { handleGdprStorageErasure } from "@/server/gdpr/storage-erasure";
 import { GDPR_STORAGE_ERASURE_PATH } from "@/shared/gdpr-erasure";
@@ -187,7 +185,8 @@ export { RankCheckWorkflow } from "./server/workflows/RankCheckWorkflow";
 // Durable Object class for the SAM in-app agent (Agents SDK).
 export { SamChatAgent } from "./server/features/sam/SamChatAgent";
 
-// Daily OAuth KV garbage collection; must match a trigger in wrangler.jsonc.
+// The daily cron trigger (retention sweeps, OAuth KV GC); must match a trigger
+// in wrangler.jsonc.
 const MCP_OAUTH_PURGE_CRON = "17 3 * * *";
 
 export default {
@@ -197,88 +196,15 @@ export default {
     env: Env,
     _ctx: ExecutionContext,
   ) {
+    // The daily trigger carries retention sweeps and OAuth KV GC; every other
+    // trigger is the 5-minute rank-check and audit-watchdog tick.
     if (controller.cron === MCP_OAUTH_PURGE_CRON) {
-      // Content-ops SERP snapshot retention rides the daily trigger: drop
-      // snapshots older than 180 days, keeping the newest 3 per keyword+device.
-      try {
-        const { SerpRepository } =
-          await import("@/server/features/content-ops/repositories/SerpRepository");
-        const cutoff = new Date(
-          Date.now() - 180 * 24 * 60 * 60 * 1000,
-        ).toISOString();
-        const pruned = await withPgClient(() =>
-          SerpRepository.pruneOlderThan(cutoff, 3),
-        );
-        if (pruned > 0) {
-          console.log(`[content-ops] pruned ${pruned} old SERP snapshots`);
-        }
-      } catch (err) {
-        console.error("[content-ops] SERP snapshot prune failed:", err);
-      }
-      // Opportunity-intel retention rides the daily trigger: snapshots older
-      // than 180 days are dropped (newest 3 per keyword+location kept);
-      // REJECTED opportunities additionally lose their raw result rows after
-      // 90 days (snapshot headers with gap analysis survive).
-      try {
-        const { OpportunitySerpRepository } =
-          await import("@/server/features/opportunity-intel/repositories/OpportunitySerpRepository");
-        const day = 24 * 60 * 60 * 1000;
-        const prunedSnapshots = await withPgClient(() =>
-          OpportunitySerpRepository.pruneOlderThan(
-            new Date(Date.now() - 180 * day).toISOString(),
-            3,
-          ),
-        );
-        const emptiedRejected = await withPgClient(() =>
-          OpportunitySerpRepository.deleteResultsForRejectedOlderThan(
-            new Date(Date.now() - 90 * day).toISOString(),
-          ),
-        );
-        if (prunedSnapshots > 0 || emptiedRejected > 0) {
-          console.log(
-            `[opportunity-intel] pruned ${prunedSnapshots} snapshots, emptied ${emptiedRejected} rejected snapshots`,
-          );
-        }
-      } catch (err) {
-        console.error("[opportunity-intel] retention prune failed:", err);
-      }
-      // Only hosted mode runs the OAuth provider (and has OAUTH_KV bound).
-      if (isHostedAuthMode(getAuthMode(env.AUTH_MODE))) {
-        const result = await openSeoOAuthProvider.purgeExpiredData(
-          env as OpenSeoOAuthEnv,
-        );
-        console.log("[mcp-oauth] purged expired OAuth data", result);
-        if (!result.done) {
-          // The sweep only advances past live records via deletions; a
-          // persistent incomplete scan means the keyspace outgrew the batch.
-          console.warn("[mcp-oauth] purge did not cover the full keyspace");
-        }
-
-        // Daily referral-sale sweep: catches paid Autumn invoices the
-        // billing.updated webhook path misses (renewals, one-time top-ups).
-        try {
-          await sweepDubReferredOrganizations();
-        } catch (err) {
-          console.error("[cron] Dub referral sale sweep failed:", err);
-        }
-      }
+      await runJob("daily", "cron", env, {
+        purgeOAuthData: () =>
+          openSeoOAuthProvider.purgeExpiredData(env as OpenSeoOAuthEnv),
+      });
       return;
     }
-
-    // Watchdog first: reconcile audits stuck in "running" whose workflow died
-    // without reaching mark-failed (OOM/CPU kills, expired instances). Runs
-    // before the rank loop so a slow tick can't delay or starve it. Its
-    // failure is held until after the rank checks so it can't suppress them,
-    // then rethrown so the invocation still reports as failed.
-    let watchdogError: unknown;
-    try {
-      await withPgClient(() => reconcileStaleAudits());
-    } catch (err) {
-      watchdogError = err;
-      console.error("[cron] Stale-audit reconcile failed:", err);
-    }
-    // Scope a per-request Postgres client for the cron run (no-op in D1 mode).
-    await withPgClient(() => runScheduledRankChecks(env));
-    if (watchdogError) throw watchdogError;
+    await runJob("frequent", "cron", env);
   },
 };

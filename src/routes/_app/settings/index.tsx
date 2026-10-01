@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Monitor, Moon, Sun } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { BackgroundJobsSettings } from "@/client/features/settings/BackgroundJobsSettings";
 import { ApiKeySettings } from "@/client/features/settings/ApiKeySettings";
 import { type ThemePreference, useThemePreference } from "@/client/lib/theme";
 import { authClient, useSession } from "@/lib/auth-client";
@@ -117,15 +118,18 @@ function PersonalSettings() {
           </section>
         </>
       ) : (
-        <section className="space-y-3">
-          <h2 className="text-sm font-medium text-base-content/50">About</h2>
-          <div className="flex items-center justify-between gap-6">
-            <span className="text-sm">Version</span>
-            <span className="font-mono text-sm text-base-content/60">
-              v{version}
-            </span>
-          </div>
-        </section>
+        <>
+          <BackgroundJobsSettings />
+          <section className="space-y-3">
+            <h2 className="text-sm font-medium text-base-content/50">About</h2>
+            <div className="flex items-center justify-between gap-6">
+              <span className="text-sm">Version</span>
+              <span className="font-mono text-sm text-base-content/60">
+                v{version}
+              </span>
+            </div>
+          </section>
+        </>
       )}
     </div>
   );

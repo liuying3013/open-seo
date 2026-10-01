@@ -1,6 +1,7 @@
 import { getDatabaseProvider } from "./provider";
 import * as sqliteApp from "./app.schema";
 import * as sqliteCandidateKeywords from "./candidate-keywords.schema";
+import * as sqliteJobRuns from "./job-runs.schema";
 import * as sqliteContentFactory from "./content-factory.schema";
 import * as sqliteContentOps from "./content-ops.schema";
 import * as sqliteOpportunityIntel from "./opportunity-intel.schema";
@@ -17,6 +18,7 @@ import * as sqliteGsc from "./gsc.schema";
 import * as sqliteTelemetry from "./telemetry.schema";
 import * as pgApp from "./pg/app.schema";
 import * as pgCandidateKeywords from "./pg/candidate-keywords.schema";
+import * as pgJobRuns from "./pg/job-runs.schema";
 import * as pgContentFactory from "./pg/content-factory.schema";
 import * as pgContentOps from "./pg/content-ops.schema";
 import * as pgOpportunityIntel from "./pg/opportunity-intel.schema";
@@ -44,6 +46,7 @@ import * as pgTelemetry from "./pg/telemetry.schema";
 // parity test is its drift guard.
 type AppSchema = typeof sqliteApp &
   typeof sqliteCandidateKeywords &
+  typeof sqliteJobRuns &
   typeof sqliteContentFactory &
   typeof sqliteContentOps &
   typeof sqliteOpportunityIntel &
@@ -64,6 +67,7 @@ const runtimeSchema =
     ? {
         ...pgApp,
         ...pgCandidateKeywords,
+        ...pgJobRuns,
         ...pgContentFactory,
         ...pgContentOps,
         ...pgOpportunityIntel,
@@ -82,6 +86,7 @@ const runtimeSchema =
     : {
         ...sqliteApp,
         ...sqliteCandidateKeywords,
+        ...sqliteJobRuns,
         ...sqliteContentFactory,
         ...sqliteContentOps,
         ...sqliteOpportunityIntel,
@@ -169,4 +174,5 @@ export const {
   ga4Connections,
   gscConnections,
   telemetryState,
+  jobRuns,
 } = schema;

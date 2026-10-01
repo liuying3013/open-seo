@@ -43,6 +43,34 @@ ALLOWED_HOST=yourdomain.com docker compose up -d
 
 You can also persist it in `.env`.
 
+## Scheduled jobs
+
+The Docker image does not run Cloudflare cron triggers, so rank-tracking schedules, the stuck-audit watchdog, and the daily retention sweeps (old SERP snapshots, old job run records) do not run on their own. To run them, have the host call an internal endpoint on a schedule.
+
+1. Generate a long random token and set it in `.env`, then recreate the container:
+
+```bash
+INTERNAL_JOBS_TOKEN=$(openssl rand -hex 32)
+```
+
+2. Call the endpoint from the host. Without `INTERNAL_JOBS_TOKEN` set, the endpoint returns 404. Requests must be `POST` with `Authorization: Bearer <token>`:
+
+| Job        | Schedule        | Does                                                                |
+| ---------- | --------------- | ------------------------------------------------------------------- |
+| `frequent` | every 5 minutes | Starts due rank-tracking checks and fails audits stuck in "running" |
+| `daily`    | once a day      | Prunes old SERP snapshots and job run records                       |
+
+Example host crontab (`crontab -e`), where `$TOKEN` is replaced with your token and the URL with the one your instance is served on:
+
+```cron
+*/5 * * * * curl -fsS -X POST -H "Authorization: Bearer $TOKEN" https://your-openseo-host.example/api/internal/jobs/frequent
+17 3 * * * curl -fsS -X POST -H "Authorization: Bearer $TOKEN" https://your-openseo-host.example/api/internal/jobs/daily
+```
+
+A systemd timer that runs the same `curl` commands works equally well. Each response is a JSON summary of the run, and every run (success or failure) is listed under Settings, in the background jobs section.
+
+A missed `frequent` tick is picked up by the next one: rank checks that are due simply start late.
+
 ## Telemetry
 
 OpenSEO collects anonymized telemetry for core usage events: heartbeats with aggregate counts (installs, users, projects, feature usage) tied to a random install ID, sent every 5 minutes during the first two hours after install, then at most once daily. Telemetry also includes failed setup check names and statuses, never values or error messages. No URLs, keywords, prompts, emails, or IP-derived location are collected, and idle installs send nothing.
