@@ -34,9 +34,11 @@ function Unknown() {
 
 function Connection({ on, onLabel }: { on: boolean; onLabel: string }) {
   return on ? (
-    <span className="badge badge-success badge-sm">{onLabel}</span>
+    <span className="badge whitespace-nowrap badge-success badge-sm">
+      {onLabel}
+    </span>
   ) : (
-    <span className="badge badge-ghost badge-sm">未接入</span>
+    <span className="badge whitespace-nowrap badge-ghost badge-sm">未接入</span>
   );
 }
 
@@ -53,7 +55,9 @@ function PlausibleStatus({
 }) {
   const badge = PLAUSIBLE_BADGES[status];
   return (
-    <span className={`badge badge-sm ${badge.className}`}>{badge.label}</span>
+    <span className={`badge whitespace-nowrap badge-sm ${badge.className}`}>
+      {badge.label}
+    </span>
   );
 }
 
@@ -97,7 +101,7 @@ function SiteRow({
       <td>
         {registry ? (
           <span
-            className={`badge badge-sm ${STATUS_BADGES[registry.opsStatus]}`}
+            className={`badge whitespace-nowrap badge-sm ${STATUS_BADGES[registry.opsStatus]}`}
           >
             {STATUS_LABELS[registry.opsStatus]}
           </span>
@@ -155,7 +159,10 @@ function SiteRow({
       <td>
         <div className="flex flex-wrap gap-1">
           {marketSummary(site).map((label) => (
-            <span key={label} className="badge badge-outline badge-sm">
+            <span
+              key={label}
+              className="badge whitespace-nowrap badge-outline badge-sm"
+            >
               {label}
             </span>
           ))}
@@ -193,7 +200,7 @@ function FilterSelect({
   options: { value: string; label: string }[];
 }) {
   return (
-    <label className="flex items-center gap-2 text-sm">
+    <label className="flex items-center gap-2 whitespace-nowrap text-sm">
       <span className="text-base-content/60">{label}</span>
       <select
         className="select select-bordered select-sm"
