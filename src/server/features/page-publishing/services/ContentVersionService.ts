@@ -5,6 +5,7 @@ import { EvidencePacksRepository } from "@/server/features/content-ops/repositor
 import { assertAssetTransition } from "@/server/features/content-ops/stateMachine";
 import { SitePagesRepository } from "@/server/features/page-plans/repositories/SitePagesRepository";
 import { runContentChecks, type ContentDraft } from "../rules/contentChecks";
+import { ApprovalsRepository } from "../repositories/ApprovalsRepository";
 import { VersionsRepository } from "../repositories/VersionsRepository";
 import type { VERSION_FILE_CHANGES } from "@/shared/pagePublishing";
 
@@ -25,6 +26,7 @@ type SubmitVersionInput = {
       change: (typeof VERSION_FILE_CHANGES)[number];
     }>;
   };
+  reviewerNotes?: string;
 };
 
 // Evidence packs are stored as JSON text; only prohibitedClaims matters here
@@ -76,8 +78,9 @@ async function submit(input: SubmitVersionInput) {
     knownPageUrls: await knownPageLinks(asset.projectId),
   });
   const version = asset.currentVersion + 1;
+  let versionId: string;
   try {
-    const versionId = await VersionsRepository.create({
+    versionId = await VersionsRepository.create({
       assetId: asset.id,
       projectId: input.projectId,
       expectedVersion: asset.currentVersion,
@@ -93,7 +96,6 @@ async function submit(input: SubmitVersionInput) {
       checksReport: JSON.stringify(checks),
       files: input.implementation.files,
     });
-    return { versionId, version, status: "qa_review" as const, checks };
   } catch (error) {
     const current = await AssetsRepository.getById(input.projectId, asset.id);
     if (current && current.currentVersion !== asset.currentVersion) {
@@ -104,6 +106,17 @@ async function submit(input: SubmitVersionInput) {
     }
     throw error;
   }
+  // The writer's open questions sit next to the version on the review page.
+  const notes = input.reviewerNotes?.trim();
+  if (notes) {
+    await ApprovalsRepository.addComment({
+      assetId: asset.id,
+      versionId,
+      userId: "agent",
+      body: notes,
+    });
+  }
+  return { versionId, version, status: "qa_review" as const, checks };
 }
 
 // Drafts link with site-relative paths ("/flexible-stone") or full URLs, with

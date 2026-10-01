@@ -101,3 +101,13 @@ export function formatTime(value: string | null | undefined) {
 export function shortUserId(userId: string) {
   return userId.slice(0, 8);
 }
+
+// Comments the platform writes carry these ids instead of a user's.
+const COMMENT_AUTHORS: Record<string, string> = {
+  system: "系统",
+  agent: "写稿代理",
+};
+
+export function commentAuthor(userId: string) {
+  return COMMENT_AUTHORS[userId] ?? `用户 ${shortUserId(userId)}`;
+}

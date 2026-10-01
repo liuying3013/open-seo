@@ -8,6 +8,7 @@ import {
   checkLevelBadges,
   checkLevelLabels,
   checkLevelOrder,
+  commentAuthor,
   formatTime,
   shortUserId,
 } from "./publishingLabels";
@@ -192,7 +193,7 @@ export function CommentsPanel({
           {detail.comments.map((item) => (
             <li key={item.id} className="rounded-lg bg-base-200 p-2">
               <div className="text-xs text-base-content/60">
-                用户 {shortUserId(item.userId)} · {formatTime(item.createdAt)}
+                {commentAuthor(item.userId)} · {formatTime(item.createdAt)}
               </div>
               <div className="whitespace-pre-wrap">{item.body}</div>
             </li>

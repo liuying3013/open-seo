@@ -49,6 +49,7 @@ type SubmitArgs = {
       change: (typeof VERSION_FILE_CHANGES)[number];
     }>;
   };
+  reviewerNotes?: string;
 };
 
 export const submitContentVersionTool = {
@@ -70,7 +71,7 @@ export const submitContentVersionTool = {
           .min(7)
           .max(64)
           .describe(
-            "`git diff --binary origin/<production-branch>...HEAD | git patch-id --stable` of the task branch. The publisher re-computes it before publishing.",
+            "`git diff --binary -U0 origin/<production-branch>...HEAD | git patch-id --stable` of the task branch (first column). The publisher re-computes it before publishing.",
           ),
         diffText: z
           .string()
@@ -85,6 +86,13 @@ export const submitContentVersionTool = {
           )
           .max(500),
       }),
+      reviewerNotes: z
+        .string()
+        .max(4000)
+        .optional()
+        .describe(
+          "Facts or choices the human reviewer should confirm before approving. Shown as a comment on the review page.",
+        ),
     },
     outputSchema: z.looseObject({
       versionId: z.string(),
