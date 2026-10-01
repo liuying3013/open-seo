@@ -14,6 +14,7 @@ import {
   ListChecks,
   MessageSquare,
   Network,
+  Rocket,
   Search,
   Sparkles,
   Telescope,
@@ -65,6 +66,11 @@ const projectNavItems = [
     to: "/p/$projectId/page-plans" as const,
     label: "页面计划",
     icon: CalendarCheck,
+  },
+  {
+    to: "/p/$projectId/publishing" as const,
+    label: "发布审批",
+    icon: Rocket,
   },
   {
     to: "/p/$projectId/search-performance" as const,
@@ -196,6 +202,7 @@ export function getProjectNavGroups(projectId: string) {
         byPath("/p/$projectId/content-ops"),
         byPath("/p/$projectId/site-pages"),
         byPath("/p/$projectId/page-plans"),
+        byPath("/p/$projectId/publishing"),
         byPath("/p/$projectId/audit"),
       ],
     },

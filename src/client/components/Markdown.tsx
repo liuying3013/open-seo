@@ -1,11 +1,13 @@
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
-import ReactMarkdown from "react-markdown";
+import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 type Props = {
   /** Raw Markdown source to render. */
   children: string;
   className?: string;
+  /** Per-element overrides merged over the defaults. */
+  components?: Components;
 };
 
 /**
@@ -18,12 +20,16 @@ type Props = {
  * Anchor URLs are sanitized to http(s) only — LLMs can be coaxed into
  * emitting `javascript:` payloads.
  */
-export function Markdown({ children, className }: Props) {
+export function Markdown({ children, className, components }: Props) {
   return (
     <div className={className}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
-        components={MARKDOWN_COMPONENTS}
+        components={
+          components
+            ? { ...MARKDOWN_COMPONENTS, ...components }
+            : MARKDOWN_COMPONENTS
+        }
       >
         {children}
       </ReactMarkdown>

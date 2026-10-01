@@ -2,6 +2,7 @@ import * as React from "react";
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Pencil } from "lucide-react";
+import { PublishingCountLink } from "@/client/features/sites/PublishingCountLink";
 import { GscMatchModal } from "@/client/features/sites/GscMatchModal";
 import { SiteEditModal } from "@/client/features/sites/SiteEditModal";
 import {
@@ -14,6 +15,7 @@ import {
   UNKNOWN_LABEL,
 } from "@/client/features/sites/siteLabels";
 import type { SiteOverviewRow } from "@/client/features/sites/types";
+import { getPublishingOverviewCounts } from "@/serverFunctions/page-publishing";
 import { getSiteOverview } from "@/serverFunctions/site-registry";
 import {
   SITE_OPS_STATUSES,
@@ -72,9 +74,13 @@ function marketSummary(site: SiteOverviewRow) {
 
 function SiteRow({
   site,
+  pendingApprovals,
+  openAlerts,
   onEdit,
 }: {
   site: SiteOverviewRow;
+  pendingApprovals: number | undefined;
+  openAlerts: number | undefined;
   onEdit: () => void;
 }) {
   const registry = site.registry;
@@ -174,6 +180,22 @@ function SiteRow({
       <td>
         <PlausibleStatus status={site.plausibleStatus} />
       </td>
+      <td>
+        <PublishingCountLink
+          projectId={site.projectId}
+          count={pendingApprovals}
+          tab="review"
+          badge="badge-info"
+        />
+      </td>
+      <td>
+        <PublishingCountLink
+          projectId={site.projectId}
+          count={openAlerts}
+          tab="ledger"
+          badge="badge-error"
+        />
+      </td>
       <td className="text-right">
         <button
           type="button"
@@ -224,6 +246,12 @@ function SitesPage() {
     queryFn: () => getSiteOverview(),
   });
   const sites = sitesQuery.data ?? [];
+  // Secondary data: the table still renders while it loads or if it fails.
+  const countsQuery = useQuery({
+    queryKey: ["publishing", "overview"],
+    queryFn: () => getPublishingOverviewCounts(),
+  });
+  const counts = countsQuery.data;
   const [group, setGroup] = React.useState(ALL);
   const [status, setStatus] = React.useState(ALL);
   const [template, setTemplate] = React.useState(ALL);
@@ -328,6 +356,8 @@ function SitesPage() {
                   <th>市场</th>
                   <th>GSC</th>
                   <th>Plausible</th>
+                  <th>待审批</th>
+                  <th>告警</th>
                   <th />
                 </tr>
               </thead>
@@ -336,13 +366,15 @@ function SitesPage() {
                   <SiteRow
                     key={site.projectId}
                     site={site}
+                    pendingApprovals={counts?.pendingApprovals[site.projectId]}
+                    openAlerts={counts?.openAlerts[site.projectId]}
                     onEdit={() => setEditingId(site.projectId)}
                   />
                 ))}
                 {filtered.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={13}
+                      colSpan={15}
                       className="text-center text-base-content/60"
                     >
                       No sites match.
