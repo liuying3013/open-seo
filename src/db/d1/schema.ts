@@ -3,6 +3,7 @@
 // SQLite tables regardless of DATABASE_PROVIDER.
 export * from "../app.schema";
 export * from "../candidate-keywords.schema";
+export * from "../content-ops.schema";
 export * from "../opportunity-intel.schema";
 export * from "../project-context.schema";
 export * from "../reports.schema";

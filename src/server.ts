@@ -193,6 +193,23 @@ export default {
     _ctx: ExecutionContext,
   ) {
     if (controller.cron === MCP_OAUTH_PURGE_CRON) {
+      // Content-ops SERP snapshot retention rides the daily trigger: drop
+      // snapshots older than 180 days, keeping the newest 3 per keyword+device.
+      try {
+        const { SerpRepository } =
+          await import("@/server/features/content-ops/repositories/SerpRepository");
+        const cutoff = new Date(
+          Date.now() - 180 * 24 * 60 * 60 * 1000,
+        ).toISOString();
+        const pruned = await withPgClient(() =>
+          SerpRepository.pruneOlderThan(cutoff, 3),
+        );
+        if (pruned > 0) {
+          console.log(`[content-ops] pruned ${pruned} old SERP snapshots`);
+        }
+      } catch (err) {
+        console.error("[content-ops] SERP snapshot prune failed:", err);
+      }
       // Opportunity-intel retention rides the daily trigger: snapshots older
       // than 180 days are dropped (newest 3 per keyword+location kept);
       // REJECTED opportunities additionally lose their raw result rows after

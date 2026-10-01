@@ -87,8 +87,10 @@ export async function fetchLiveSerp(input: {
   keyword: string;
   locationCode: number;
   languageCode: string;
+  device?: "desktop" | "mobile";
   depth?: number;
 }): Promise<DataforseoApiResponse<SerpLiveItem[]>> {
+  const device = input.device ?? "desktop";
   const response = await dataforseoPost(
     "/v3/serp/google/organic/live/advanced",
     [
@@ -96,8 +98,8 @@ export async function fetchLiveSerp(input: {
         keyword: input.keyword,
         location_code: input.locationCode,
         language_code: input.languageCode,
-        device: "desktop",
-        os: "windows",
+        device,
+        os: device === "desktop" ? "windows" : "android",
         depth: clampSerpDepth(input.depth ?? SERP_ANALYSIS_DEPTH),
       },
     ],

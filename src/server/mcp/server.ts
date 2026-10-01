@@ -88,6 +88,34 @@ import {
   listSiteAuditsTool,
 } from "@/server/mcp/tools/site-audit-cleanup-tools";
 import {
+  getClusterTool,
+  getContentOpsStatusTool,
+  getNextActionsTool,
+} from "@/server/mcp/tools/content-ops-status";
+import {
+  listOffersTool,
+  saveOffersTool,
+} from "@/server/mcp/tools/content-ops-offers";
+import {
+  preScoreClusterTool,
+  proposeClustersTool,
+  saveClustersTool,
+} from "@/server/mcp/tools/content-ops-clustering";
+import {
+  analyzeClusterTool,
+  fetchClusterSerpsTool,
+} from "@/server/mcp/tools/content-ops-serp";
+import {
+  decideDeploymentTool,
+  reviewDecisionTool,
+  scoreClusterTool,
+} from "@/server/mcp/tools/content-ops-decide";
+import {
+  approveEvidencePackTool,
+  buildEvidencePackTool,
+  generateBriefTool,
+} from "@/server/mcp/tools/content-ops-content";
+import {
   addOpportunitiesTool,
   getOpportunityPipelineStatusTool,
   getOpportunityReportTool,
@@ -247,6 +275,22 @@ export function createOpenSeoMcpServer(authProps: McpProps) {
   register(listReportTemplatesTool);
   register(saveReportTemplateTool);
   register(deleteReportTemplateTool);
+  register(getContentOpsStatusTool);
+  register(getNextActionsTool);
+  register(getClusterTool);
+  register(listOffersTool);
+  register(saveOffersTool);
+  register(proposeClustersTool);
+  register(saveClustersTool);
+  register(preScoreClusterTool);
+  register(fetchClusterSerpsTool);
+  register(analyzeClusterTool);
+  register(scoreClusterTool);
+  register(decideDeploymentTool);
+  register(reviewDecisionTool);
+  register(buildEvidencePackTool);
+  register(approveEvidencePackTool);
+  register(generateBriefTool);
   register(addOpportunitiesTool);
   register(runOpportunityScanTool);
   register(getOpportunityPipelineStatusTool);
