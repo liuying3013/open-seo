@@ -35,6 +35,7 @@ const publishItemSchema = z.object({
   targetUrl: z.string().nullable().optional(),
   title: z.string().nullable().optional(),
   taskBranch: z.string(),
+  headCommit: z.string().nullable().optional(),
   draft: draftSchema,
   activeAttempt: z
     .object({ id: z.string(), status: z.string() })

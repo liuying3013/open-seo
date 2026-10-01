@@ -83,6 +83,8 @@ type PrepareInput = {
   productionBranch: string;
   taskBranch: string;
   approvedPatchId: string;
+  // The task branch head the approved version was submitted with.
+  approvedHeadCommit?: string | null;
   commitMessage: string;
 };
 
@@ -91,10 +93,10 @@ export type PrepareResult =
   | { ok: false; stage: "merge" | "fingerprint"; message: string };
 
 /**
- * Rebase the task branch onto origin/<production>, check the approved
- * fingerprint, then build ONE squash commit on origin/<production>. Nothing is
- * pushed. The squash commit's own patch id must equal the approved one, so a
- * rollback only ever needs to revert that single commit.
+ * Rebase the task branch onto origin/<production>, check that it still carries
+ * the approved change, then build ONE squash commit on origin/<production>
+ * holding exactly the rebased change, so a rollback only ever needs to revert
+ * that single commit. Nothing is pushed.
  */
 export function prepareSquashCommit(input: PrepareInput): PrepareResult {
   const { repoDir, worktreeDir, productionBranch, taskBranch } = input;
@@ -114,6 +116,14 @@ export function prepareSquashCommit(input: PrepareInput): PrepareResult {
   try {
     resetWorktree(repoDir, worktreeDir, base);
     git(worktreeDir, ["checkout", "-B", TEMP_BRANCH, taskRef]);
+    // A branch still at the approved head carries exactly the approved change,
+    // so a clean rebase needs no fingerprint. That matters because diff
+    // alignment, and with it the patch id, can shift when other changes landed
+    // in the same file.
+    const approvedHead = input.approvedHeadCommit?.toLowerCase();
+    const atApprovedHead =
+      !!approvedHead &&
+      git(worktreeDir, ["rev-parse", "HEAD"]).startsWith(approvedHead);
     const rebase = run(worktreeDir, ["rebase", base]);
     if (!rebase.ok) {
       run(worktreeDir, ["rebase", "--abort"]);
@@ -125,25 +135,27 @@ export function prepareSquashCommit(input: PrepareInput): PrepareResult {
     }
 
     const rebased = `${base}...HEAD`;
-    if (!matchesApproved(worktreeDir, rebased, input.approvedPatchId)) {
+    if (
+      !atApprovedHead &&
+      !matchesApproved(worktreeDir, rebased, input.approvedPatchId)
+    ) {
       return {
         ok: false,
         stage: "fingerprint",
-        message: `Patch id after rebase is ${patchId(worktreeDir, rebased) ?? "empty"}, approved ${input.approvedPatchId}.`,
+        message: `Task branch is no longer at the approved commit and its patch id after rebase is ${patchId(worktreeDir, rebased) ?? "empty"}, approved ${input.approvedPatchId}.`,
       };
     }
+    const rebasedTree = git(worktreeDir, ["rev-parse", "HEAD^{tree}"]);
 
     git(worktreeDir, ["checkout", "--detach", "--force", base]);
     git(worktreeDir, ["merge", "--squash", TEMP_BRANCH]);
     git(worktreeDir, ["commit", "--no-verify", "-m", input.commitMessage]);
     const commit = git(worktreeDir, ["rev-parse", "HEAD"]);
-
-    const squashed = `${commit}^..${commit}`;
-    if (!matchesApproved(worktreeDir, squashed, input.approvedPatchId)) {
+    if (git(worktreeDir, ["rev-parse", `${commit}^{tree}`]) !== rebasedTree) {
       return {
         ok: false,
         stage: "fingerprint",
-        message: `Squash commit patch id is ${patchId(worktreeDir, squashed) ?? "empty"}, approved ${input.approvedPatchId}.`,
+        message: "The squash commit does not match the rebased task branch.",
       };
     }
     return { ok: true, commit };

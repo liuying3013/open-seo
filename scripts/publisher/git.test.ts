@@ -43,13 +43,14 @@ function makeTaskBranch() {
   return approved;
 }
 
-const prepare = (approvedPatchId: string | null) =>
+const prepare = (approvedPatchId: string | null, approvedHeadCommit?: string) =>
   prepareSquashCommit({
     repoDir: clone,
     worktreeDir: worktree,
     productionBranch: "main",
     taskBranch: "task/page",
     approvedPatchId: approvedPatchId ?? "none",
+    approvedHeadCommit,
     commitMessage: "Publish: New page (asset a1 v1)",
   });
 
@@ -118,14 +119,23 @@ describe("prepareSquashCommit", () => {
     });
   });
 
+  it("publishes a branch still at the approved head even when its patch id shifted", () => {
+    makeTaskBranch();
+    const approvedHead = git(clone, ["rev-parse", "task/page"]);
+    git(clone, ["fetch", "origin"]);
+
+    expect(prepare("0000000", approvedHead)).toMatchObject({ ok: true });
+  });
+
   it("stops with a fingerprint failure when the branch content changed after approval", () => {
     const approved = makeTaskBranch();
+    const approvedHead = git(clone, ["rev-parse", "task/page"]);
     git(clone, ["checkout", "task/page"]);
     commitFile(clone, "content/new.md", "# New page\n\nsneaky edit\n", "edit");
     git(clone, ["checkout", "main"]);
     git(clone, ["fetch", "origin"]);
 
-    const result = prepare(approved);
+    const result = prepare(approved, approvedHead);
     expect(result).toMatchObject({ ok: false, stage: "fingerprint" });
   });
 

@@ -51,13 +51,13 @@ For every site in the OpenSEO site registry that has a clone in `SITES_DIR`
    - In a publisher-owned worktree (`SITES_DIR/.publisher/<repo>`), rebase a
      temporary copy of the task branch onto `origin/<production branch>`.
      A conflict stops with `merge`.
-   - Recompute the fingerprint of `origin/<prod>...HEAD` (see below) and
-     compare it with the approved one. A difference stops with `fingerprint`
-     (the server voids the approval).
+   - Check that the rebased branch still carries the approved change (see
+     Fingerprint below). If not, stop with `fingerprint` (the server voids
+     the approval).
    - Create one squash commit on `origin/<prod>` (`Publish: <title> (asset <id>
-v<n>)`), check that its patch id still equals the approved one, and push
-     it. A rejected non-fast-forward push is retried once after a fetch; a
-     second rejection stops with `push`. This single commit is the one a
+v<n>)`), check that it holds exactly the rebased change, and push it. A
+     rejected non-fast-forward push is retried once after a fetch; a second
+     rejection stops with `push`. This single commit is the one a
      rollback reverts.
    - Deploy: with `autoDeploy` off the publisher triggers a Coolify deployment;
      with it on, it finds the deployment for the pushed commit and triggers one
@@ -74,13 +74,19 @@ at least one failed or unverified entry, 2 means the run could not start.
 
 ## Fingerprint
 
-A version's fingerprint is
-`git diff --binary -U0 <base> <head> | git patch-id --stable` (first column),
-computed by the writer when it submits the version. Without context lines it
-covers exactly the lines the change adds and removes, so it still matches
-after the rebase when an earlier publish changed neighbouring lines of the same
-file; any change to the added or removed lines does not. Fingerprints taken
-with git's default three context lines are accepted too.
+A version records the task branch head it was submitted with and a
+fingerprint, `git diff --binary -U0 <base> <head> | git patch-id --stable`
+(first column). Before publishing, either must still hold:
+
+- The task branch is still at the recorded head. The branch then carries
+  exactly the approved change, and a clean rebase is enough. This is the usual
+  case, and it does not depend on how git aligns the diff, which can shift the
+  patch id when other changes landed in the same file.
+- The rebased change has the approved fingerprint, for a branch that was
+  rewritten without changing its content. Without context lines the
+  fingerprint covers exactly the added and removed lines, so neighbouring
+  changes from earlier publishes do not break it. Fingerprints taken with
+  git's default three context lines are accepted too.
 
 ## Self-check before submitting
 

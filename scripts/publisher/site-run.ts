@@ -201,6 +201,7 @@ async function publishItem(ctx: RunContext, job: SiteJob, item: PublishItem) {
         productionBranch: job.productionBranch,
         taskBranch: item.taskBranch,
         approvedPatchId: item.approvedPatchId,
+        approvedHeadCommit: item.headCommit,
         commitMessage: `Publish: ${title} (asset ${item.assetId} v${item.version})`,
       }),
     );
