@@ -66,24 +66,33 @@ function shinglesOf(tokens: string[], size: number): string[] {
   return out;
 }
 
-/** 0-100, rounded. Returns 0 when the draft has no text. */
-export function textMatchScore(
-  draft: ApprovedDraftText,
-  liveText: string,
-): number {
+/** Per approved block: how many of its shingles the live text contains. */
+export function blockCoverage(draft: ApprovedDraftText, liveText: string) {
   const liveTokens = tokenize(liveText);
   const live = new Set<string>();
   for (let size = 1; size <= SHINGLE_SIZE; size += 1) {
     for (const shingle of shinglesOf(liveTokens, size)) live.add(shingle);
   }
+  return draftBlocks(draft).map((block) => {
+    const shingles = shinglesOf(tokenize(block), SHINGLE_SIZE);
+    return {
+      block,
+      total: shingles.length,
+      found: shingles.filter((shingle) => live.has(shingle)).length,
+    };
+  });
+}
 
+/** 0-100, rounded. Returns 0 when the draft has no text. */
+export function textMatchScore(
+  draft: ApprovedDraftText,
+  liveText: string,
+): number {
   let total = 0;
   let found = 0;
-  for (const block of draftBlocks(draft)) {
-    for (const shingle of shinglesOf(tokenize(block), SHINGLE_SIZE)) {
-      total += 1;
-      if (live.has(shingle)) found += 1;
-    }
+  for (const block of blockCoverage(draft, liveText)) {
+    total += block.total;
+    found += block.found;
   }
   return total === 0 ? 0 : Math.round((found / total) * 100);
 }

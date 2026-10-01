@@ -34,16 +34,31 @@ function gitOk(cwd: string, args: string[]): boolean {
 }
 
 /**
- * `git diff --binary <range> | git patch-id --stable`, first column.
- * Null when the diff is empty.
+ * `git diff --binary -U0 <range> | git patch-id --stable`, first column. Null
+ * when the diff is empty. Without context lines the fingerprint covers exactly
+ * the lines a change adds and removes, so it survives a rebase onto a
+ * production branch that changed neighbouring lines. `context` reproduces
+ * fingerprints taken with git's default three lines.
  */
-export function patchId(cwd: string, range: string): string | null {
-  const diff = run(cwd, ["diff", "--binary", range]);
+export function patchId(
+  cwd: string,
+  range: string,
+  { context = 0 }: { context?: number } = {},
+): string | null {
+  const diff = run(cwd, ["diff", "--binary", `-U${context}`, range]);
   if (!diff.ok) throw new GitError(`git diff ${range}: ${diff.stderr}`);
   if (diff.stdout.length === 0) return null;
   const out = run(cwd, ["patch-id", "--stable"], diff.stdout);
   if (!out.ok) throw new GitError(`git patch-id: ${out.stderr}`);
   return out.stdout.toString("utf8").trim().split(/\s+/)[0] || null;
+}
+
+// Versions fingerprinted with git's default context still match.
+function matchesApproved(cwd: string, range: string, approved: string) {
+  return (
+    patchId(cwd, range) === approved ||
+    patchId(cwd, range, { context: 3 }) === approved
+  );
 }
 
 /** The publisher's own checkout of the clone, reset to `ref` (detached). */
@@ -109,12 +124,12 @@ export function prepareSquashCommit(input: PrepareInput): PrepareResult {
       };
     }
 
-    const rebased = patchId(worktreeDir, `${base}...HEAD`);
-    if (rebased !== input.approvedPatchId) {
+    const rebased = `${base}...HEAD`;
+    if (!matchesApproved(worktreeDir, rebased, input.approvedPatchId)) {
       return {
         ok: false,
         stage: "fingerprint",
-        message: `Patch id after rebase is ${rebased ?? "empty"}, approved ${input.approvedPatchId}.`,
+        message: `Patch id after rebase is ${patchId(worktreeDir, rebased) ?? "empty"}, approved ${input.approvedPatchId}.`,
       };
     }
 
@@ -123,12 +138,12 @@ export function prepareSquashCommit(input: PrepareInput): PrepareResult {
     git(worktreeDir, ["commit", "--no-verify", "-m", input.commitMessage]);
     const commit = git(worktreeDir, ["rev-parse", "HEAD"]);
 
-    const squashed = patchId(worktreeDir, `${commit}^..${commit}`);
-    if (squashed !== input.approvedPatchId) {
+    const squashed = `${commit}^..${commit}`;
+    if (!matchesApproved(worktreeDir, squashed, input.approvedPatchId)) {
       return {
         ok: false,
         stage: "fingerprint",
-        message: `Squash commit patch id is ${squashed ?? "empty"}, approved ${input.approvedPatchId}.`,
+        message: `Squash commit patch id is ${patchId(worktreeDir, squashed) ?? "empty"}, approved ${input.approvedPatchId}.`,
       };
     }
     return { ok: true, commit };

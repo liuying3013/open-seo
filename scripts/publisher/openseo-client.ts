@@ -21,7 +21,7 @@ const listSitesSchema = z.object({
   ),
 });
 
-const draftSchema = z.object({
+export const draftSchema = z.object({
   title: z.string(),
   body: z.string(),
 });

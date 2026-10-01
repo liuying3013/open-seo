@@ -51,9 +51,9 @@ For every site in the OpenSEO site registry that has a clone in `SITES_DIR`
    - In a publisher-owned worktree (`SITES_DIR/.publisher/<repo>`), rebase a
      temporary copy of the task branch onto `origin/<production branch>`.
      A conflict stops with `merge`.
-   - Recompute `git diff --binary origin/<prod>...HEAD | git patch-id --stable`
-     and compare it with the approved fingerprint. A difference stops with
-     `fingerprint` (the server voids the approval).
+   - Recompute the fingerprint of `origin/<prod>...HEAD` (see below) and
+     compare it with the approved one. A difference stops with `fingerprint`
+     (the server voids the approval).
    - Create one squash commit on `origin/<prod>` (`Publish: <title> (asset <id>
 v<n>)`), check that its patch id still equals the approved one, and push
      it. A rejected non-fast-forward push is retried once after a fetch; a
@@ -71,6 +71,27 @@ v<n>)`), check that its patch id still equals the approved one, and push
 Failures are only recorded, never retried automatically. Log lines go to stdout,
 one per step, with a summary at the end. Exit code 0 means no failures, 1 means
 at least one failed or unverified entry, 2 means the run could not start.
+
+## Fingerprint
+
+A version's fingerprint is
+`git diff --binary -U0 <base> <head> | git patch-id --stable` (first column),
+computed by the writer when it submits the version. Without context lines it
+covers exactly the lines the change adds and removes, so it still matches
+after the rebase when an earlier publish changed neighbouring lines of the same
+file; any change to the added or removed lines does not. Fingerprints taken
+with git's default three context lines are accepted too.
+
+## Self-check before submitting
+
+```
+pnpm exec tsx scripts/publisher/check-page.ts --url <url> --draft <file.json>
+```
+
+Fetches a page, typically a local build of the task branch, and scores it
+against the draft the way live verification will. It prints the status code,
+noindex, canonical and text match score, then every draft line the page does
+not show in full. Exit code 0 means it would pass live verification.
 
 ## State
 

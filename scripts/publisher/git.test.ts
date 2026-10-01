@@ -96,6 +96,28 @@ describe("prepareSquashCommit", () => {
     );
   });
 
+  it("keeps the fingerprint when origin changed a line next to the change", () => {
+    commitFile(clone, "list.md", "a\nb\nc\nd\ne\n", "list");
+    git(clone, ["push", "origin", "main"]);
+    git(clone, ["checkout", "-b", "task/page"]);
+    commitFile(clone, "list.md", "a\nb\nc\nd\nE\n", "task edit");
+    const approved = patchId(clone, "origin/main...HEAD");
+    const approvedWithContext = patchId(clone, "origin/main...HEAD", {
+      context: 3,
+    });
+    git(clone, ["checkout", "main"]);
+    // An earlier publish changed a line inside git's default diff context.
+    commitFile(clone, "list.md", "a\nb\nC\nd\ne\n", "neighbour");
+    git(clone, ["push", "origin", "main"]);
+    git(clone, ["fetch", "origin"]);
+
+    expect(prepare(approved)).toMatchObject({ ok: true });
+    expect(prepare(approvedWithContext)).toMatchObject({
+      ok: false,
+      stage: "fingerprint",
+    });
+  });
+
   it("stops with a fingerprint failure when the branch content changed after approval", () => {
     const approved = makeTaskBranch();
     git(clone, ["checkout", "task/page"]);

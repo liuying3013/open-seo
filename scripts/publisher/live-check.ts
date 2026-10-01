@@ -4,7 +4,7 @@ import * as cheerio from "cheerio";
 import { textMatchScore, type ApprovedDraftText } from "./text-match";
 
 const RETRY_INTERVAL_MS = 20_000;
-const MATCH_TARGET = 85;
+export const MATCH_TARGET = 85;
 
 const BLOCK_ELEMENTS =
   "p, div, h1, h2, h3, h4, h5, h6, li, ul, ol, tr, td, th, br, section, article, header, footer, main, nav, aside, blockquote, pre, dt, dd, figcaption, table, form";
@@ -32,18 +32,21 @@ export function inspectPage(
     /\b(?:noindex|none)\b/i.test(headers.get("x-robots-tag") ?? "") ||
     /\b(?:noindex|none)\b/i.test(robots);
   const canonical = $('link[rel="canonical"]').attr("href")?.trim() || null;
+  return {
+    noindex,
+    canonical,
+    textMatch: draft ? textMatchScore(draft, visibleText($)) : 0,
+  };
+}
 
+/** The body text a reader sees. Removes non-rendered elements from `$`. */
+export function visibleText($: cheerio.CheerioAPI): string {
   // The score is coverage of the approved text, so surrounding page chrome
   // (nav, footer) does no harm; only non-rendered text is dropped.
   $("script, style, noscript, template").remove();
   // Without a separator, adjacent blocks would glue into one word.
   $(BLOCK_ELEMENTS).after("\n");
-  const text = $("body").text();
-  return {
-    noindex,
-    canonical,
-    textMatch: draft ? textMatchScore(draft, text) : 0,
-  };
+  return $("body").text();
 }
 
 async function fetchOnce(
