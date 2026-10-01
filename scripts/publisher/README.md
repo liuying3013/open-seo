@@ -13,6 +13,11 @@ pnpm exec tsx scripts/publisher/run.ts [--project <projectId>] [--dry-run]
 `--dry-run` fetches and prints what it would do. It pushes nothing, deploys
 nothing, writes no state and reports nothing to OpenSEO.
 
+It needs Node 20 or later (dependencies rely on the global `File`). Cron jobs
+usually get a minimal `PATH` and no proxy variables, so point the cron
+environment at the right Node binary and set `HTTPS_PROXY` / `NO_PROXY` there
+if the host needs a proxy to reach the git remote.
+
 ## Configuration (environment variables)
 
 | Variable                         | Meaning                                                                                         |
