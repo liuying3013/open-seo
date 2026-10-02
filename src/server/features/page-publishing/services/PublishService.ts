@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { ContentOpsError } from "@/server/features/content-ops/contentOpsErrors";
 import { AssetsRepository } from "@/server/features/content-ops/repositories/AssetsRepository";
+import { SitePagesService } from "@/server/features/page-plans/services/SitePagesService";
 import { getBytesFromR2, putBytesToR2 } from "@/server/lib/r2";
 import {
   PUBLISH_TEXT_MATCH_THRESHOLD,
@@ -323,12 +324,30 @@ async function recordAttempt(input: RecordAttemptInput) {
       });
       return { attemptId, status: "unverified" as const, reason: failure };
     }
+    const publishedUrl = input.publishedUrl ?? asset.targetUrl;
     await PublishAttemptsRepository.markPublished({
       attemptId,
       assetId: asset.id,
       fields,
-      publishedUrl: input.publishedUrl ?? asset.targetUrl,
+      publishedUrl,
     });
+    // A verified page joins the site page inventory right away, so the next
+    // drafts can link to a new page without an "unknown page" warning.
+    if (publishedUrl) {
+      await SitePagesService.importPages({
+        projectId: input.projectId,
+        pages: [
+          {
+            url: publishedUrl,
+            language: asset.language ?? undefined,
+            statusCode: 200,
+            noindex: false,
+            source: "publish",
+            lastCheckedAt: new Date().toISOString(),
+          },
+        ],
+      });
+    }
     return { attemptId, status: "published" as const, reason: null };
   }
 

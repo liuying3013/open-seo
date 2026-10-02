@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { PublishItem, PublishQueue } from "./openseo-client";
-import { planRun } from "./queue";
+import { MAX_DEPLOY_TRIES, planRun } from "./queue";
 
 const item = (overrides: Partial<PublishItem>): PublishItem => ({
   assetId: "a1",
@@ -40,5 +40,23 @@ describe("planRun", () => {
       "pushed",
       "rb",
     ]);
+  });
+
+  it("redeploys a pushed approval whose deploy failed, up to the retry limit", () => {
+    const queue: PublishQueue = {
+      publish: [
+        item({ assetId: "retry", approvalId: "ap-retry", failedAttempts: 1 }),
+        item({
+          assetId: "broken",
+          approvalId: "ap-broken",
+          failedAttempts: MAX_DEPLOY_TRIES,
+        }),
+      ],
+      rollbacks: [],
+    };
+    const plan = planRun(queue, new Set(["ap-retry", "ap-broken"]));
+    expect(plan.redeploy.map((entry) => entry.assetId)).toEqual(["retry"]);
+    expect(plan.publish).toEqual([]);
+    expect(plan.skipped.map((entry) => entry.assetId)).toEqual(["broken"]);
   });
 });

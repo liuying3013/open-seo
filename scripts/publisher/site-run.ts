@@ -6,6 +6,7 @@ import type { CoolifyClient } from "./coolify";
 import {
   commitsBetween,
   errorMessage,
+  findPublishCommit,
   git,
   prepareRevert,
   prepareSquashCommit,
@@ -108,14 +109,22 @@ async function detectChanges(ctx: RunContext, job: SiteJob, cloneDir: string) {
   known.lastSha = head;
 }
 
-async function deploy(ctx: RunContext, job: SiteJob, commit: string) {
+// `fresh` always triggers a new deployment: a retry must not pick up the
+// failed deployment of the same commit.
+async function deploy(
+  ctx: RunContext,
+  job: SiteJob,
+  commit: string,
+  fresh = false,
+) {
   const coolify = ctx.coolify;
   const appUuid = job.coolifyAppUuid;
   if (!coolify || !appUuid)
     throw new Error("Coolify is not configured for this site.");
-  const uuid = job.autoDeploy
-    ? await coolify.findOrTriggerDeployment(appUuid, commit)
-    : await coolify.triggerDeploy(appUuid);
+  const uuid =
+    job.autoDeploy && !fresh
+      ? await coolify.findOrTriggerDeployment(appUuid, commit)
+      : await coolify.triggerDeploy(appUuid);
   return { uuid, wait: () => coolify.waitForDeployment(uuid) };
 }
 
@@ -155,7 +164,17 @@ function rememberPush(
   saveState(ctx.sitesDir, ctx.state);
 }
 
-async function publishItem(ctx: RunContext, job: SiteJob, item: PublishItem) {
+/**
+ * Push the approved change, deploy it, verify the live page and record the
+ * outcome. With `pushedCommit` the change is already on the production branch
+ * from an earlier attempt whose deploy failed: deploy and verify it again.
+ */
+async function publishItem(
+  ctx: RunContext,
+  job: SiteJob,
+  item: PublishItem,
+  pushedCommit?: string,
+) {
   const { openseo, log } = ctx;
   const tag = `${job.label}: asset ${item.assetId} v${item.version}`;
   if (!item.targetUrl) {
@@ -175,9 +194,14 @@ async function publishItem(ctx: RunContext, job: SiteJob, item: PublishItem) {
     projectId: job.projectId,
     assetId: item.assetId,
     approvalId: item.approvalId,
-    status: "publishing",
+    status: pushedCommit ? "deploying" : "publishing",
+    ...(pushedCommit && { mergeCommit: pushedCommit }),
   });
-  log(`${tag}: attempt ${attemptId} started`);
+  log(
+    pushedCommit
+      ? `${tag}: attempt ${attemptId} deploys ${short(pushedCommit)} again`
+      : `${tag}: attempt ${attemptId} started`,
+  );
 
   let stage: Stage | "fingerprint" = "merge";
   const fail = async (errorStage: Stage | "fingerprint", message: string) => {
@@ -193,25 +217,28 @@ async function publishItem(ctx: RunContext, job: SiteJob, item: PublishItem) {
   };
 
   try {
-    const title = item.title ?? item.draft.title;
-    const result = await buildAndPush(job, cloneDir, worktreeDir, () =>
-      prepareSquashCommit({
-        repoDir: cloneDir,
-        worktreeDir,
-        productionBranch: job.productionBranch,
-        taskBranch: item.taskBranch,
-        approvedPatchId: item.approvedPatchId,
-        approvedHeadCommit: item.headCommit,
-        commitMessage: `Publish: ${title} (asset ${item.assetId} v${item.version})`,
-      }),
-    );
-    if (!result.ok) return await fail(result.stage, result.message);
-    const mergeCommit = result.commit;
-    rememberPush(ctx, job, mergeCommit, item.approvalId);
-    log(`${tag}: pushed ${short(mergeCommit)} to ${job.productionBranch}`);
+    let mergeCommit = pushedCommit;
+    if (!mergeCommit) {
+      const title = item.title ?? item.draft.title;
+      const result = await buildAndPush(job, cloneDir, worktreeDir, () =>
+        prepareSquashCommit({
+          repoDir: cloneDir,
+          worktreeDir,
+          productionBranch: job.productionBranch,
+          taskBranch: item.taskBranch,
+          approvedPatchId: item.approvedPatchId,
+          approvedHeadCommit: item.headCommit,
+          commitMessage: `Publish: ${title} (asset ${item.assetId} v${item.version})`,
+        }),
+      );
+      if (!result.ok) return await fail(result.stage, result.message);
+      mergeCommit = result.commit;
+      rememberPush(ctx, job, mergeCommit, item.approvalId);
+      log(`${tag}: pushed ${short(mergeCommit)} to ${job.productionBranch}`);
+    }
 
     stage = "deploy";
-    const deployment = await deploy(ctx, job, mergeCommit);
+    const deployment = await deploy(ctx, job, mergeCommit, !!pushedCommit);
     log(`${tag}: deployment ${deployment.uuid}`);
     await openseo.recordAttempt({
       projectId: job.projectId,
@@ -377,6 +404,24 @@ export async function processSite(ctx: RunContext, job: SiteJob) {
         `${job.label}: [dry-run] would revert ${item.mergeCommit ?? "(none)"} for asset ${item.assetId}`,
       );
     else await rollbackItem(ctx, job, item);
+  }
+  for (const item of plan.redeploy) {
+    const commit = findPublishCommit(
+      cloneDir,
+      job.productionBranch,
+      item.assetId,
+      item.version,
+    );
+    if (!commit) {
+      ctx.counts.skipped += 1;
+      ctx.log(
+        `${job.label}: skip asset ${item.assetId}: its publish commit is no longer on ${job.productionBranch}`,
+      );
+    } else if (ctx.dryRun) {
+      ctx.log(
+        `${job.label}: [dry-run] would deploy ${short(commit)} again for asset ${item.assetId} v${item.version}`,
+      );
+    } else await publishItem(ctx, job, item, commit);
   }
   for (const item of plan.publish) {
     if (ctx.dryRun)

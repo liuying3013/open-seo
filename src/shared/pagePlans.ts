@@ -21,7 +21,13 @@ export const WORK_ORDER_ACTIONS: readonly PageAction[] = [
 ];
 
 export const PAGE_ROLES = ["hub", "spoke", "money", "other"] as const;
-export const SITE_PAGE_SOURCES = ["sitemap", "manual", "crawl"] as const;
+// "publish": added by the publisher once a page it published was verified live.
+export const SITE_PAGE_SOURCES = [
+  "sitemap",
+  "manual",
+  "crawl",
+  "publish",
+] as const;
 export const PAGE_PLAN_STATUSES = ["draft", "approved", "rejected"] as const;
 
 export const PAGE_PERIOD_PATTERN = /^\d{4}-(0[1-9]|1[0-2])$/;

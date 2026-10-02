@@ -61,6 +61,30 @@ function matchesApproved(cwd: string, range: string, approved: string) {
   );
 }
 
+/**
+ * The squash commit this publisher pushed for a work order version, if it is
+ * still on origin/<production>. Matches the message `prepareSquashCommit`
+ * callers write: `Publish: <title> (asset <id> v<n>)`.
+ */
+export function findPublishCommit(
+  cwd: string,
+  productionBranch: string,
+  assetId: string,
+  version: number,
+): string | null {
+  const escaped = assetId.replace(/[^\w-]/g, "\\$&");
+  const out = git(cwd, [
+    "log",
+    `origin/${productionBranch}`,
+    "--extended-regexp",
+    `--grep=^Publish: .*\\(asset ${escaped} v${version}\\)$`,
+    "--format=%H",
+    "-n",
+    "1",
+  ]);
+  return out || null;
+}
+
 /** The publisher's own checkout of the clone, reset to `ref` (detached). */
 function resetWorktree(repoDir: string, worktreeDir: string, ref: string) {
   git(repoDir, ["worktree", "prune"]);

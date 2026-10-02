@@ -42,9 +42,12 @@ For every site in the OpenSEO site registry that has a clone in `SITES_DIR`
 1. `git fetch origin`, then compare `origin/<production branch>` with the last
    checked commit. Commits not pushed by the publisher are reported with
    `report_site_changes`. The first run only records a baseline.
-2. Read `list_publish_queue`. Entries with an in-flight attempt, a failed
-   attempt on the current approval, or an approval this publisher already pushed
-   are skipped.
+2. Read `list_publish_queue`. Entries with an in-flight attempt or a failed
+   attempt on the current approval are skipped, and so are approvals this
+   publisher already pushed: their commit is on the production branch. The
+   exception is a pushed approval whose deploy failed (for example the build
+   server ran out of disk): it is deployed again, without a new push, until it
+   has three failed attempts.
 3. Rollback requests first: `git revert` of the recorded publish commit, push,
    deploy, verify, report `rolled_back`.
 4. Each due publication:
@@ -69,7 +72,8 @@ v<n>)`), check that it holds exactly the rebased change, and push it. A
      canonical, and a text match score; take 1440px and 390px screenshots with
      Playwright. The server decides between `published` and `unverified`.
 
-Failures are only recorded, never retried automatically. Log lines go to stdout,
+Failures are only recorded, never retried automatically, except the deploy
+retry above. Log lines go to stdout,
 one per step, with a summary at the end. Exit code 0 means no failures, 1 means
 at least one failed or unverified entry, 2 means the run could not start.
 
