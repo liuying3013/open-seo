@@ -29,6 +29,21 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const idOf = (deployment: Deployment) =>
   deployment.deployment_uuid ?? deployment.uuid;
 
+// A queued deployment has not resolved its commit yet ("HEAD"); it builds the
+// branch head once it starts, so it includes anything pushed before then.
+const isQueuedForHead = (deployment: Deployment) =>
+  deployment.status === "queued" &&
+  (!deployment.commit || deployment.commit === "HEAD");
+
+class CoolifyHttpError extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+  ) {
+    super(message);
+  }
+}
+
 export class CoolifyClient {
   constructor(
     private readonly baseUrl: string,
@@ -50,8 +65,9 @@ export class CoolifyClient {
     });
     const text = await response.text();
     if (!response.ok) {
-      throw new Error(
+      throw new CoolifyHttpError(
         `Coolify ${method} ${pathAndQuery}: HTTP ${response.status} ${text.slice(0, 300)}`,
+        response.status,
       );
     }
     return JSON.parse(text);
@@ -68,7 +84,23 @@ export class CoolifyClient {
     const uuid = body.deployments?.[0] && idOf(body.deployments[0]);
     const found = uuid ?? body.deployment_uuid;
     if (!found) throw new Error("Coolify did not return a deployment uuid.");
-    return found;
+    // While the app already has a deployment queued, Coolify drops the new
+    // request but still answers with a uuid that never exists. Follow the
+    // queued one instead.
+    try {
+      await this.getDeployment(found);
+      return found;
+    } catch (error) {
+      if (!(error instanceof CoolifyHttpError) || error.status !== 404) {
+        throw error;
+      }
+      const queued = (await this.listAppDeployments(appUuid)).find(
+        isQueuedForHead,
+      );
+      const queuedUuid = queued && idOf(queued);
+      if (!queuedUuid) throw error;
+      return queuedUuid;
+    }
   }
 
   async getDeployment(uuid: string): Promise<Deployment> {
@@ -100,8 +132,9 @@ export class CoolifyClient {
       const list = await this.listAppDeployments(appUuid);
       const match = list.find(
         (item) =>
-          item.commit &&
-          (item.commit.startsWith(commit) || commit.startsWith(item.commit)),
+          isQueuedForHead(item) ||
+          (item.commit &&
+            (item.commit.startsWith(commit) || commit.startsWith(item.commit))),
       );
       const uuid = match && idOf(match);
       if (uuid) return uuid;

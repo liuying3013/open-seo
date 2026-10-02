@@ -65,7 +65,10 @@ v<n>)`), check that it holds exactly the rebased change, and push it. A
      rollback reverts.
    - Deploy: with `autoDeploy` off the publisher triggers a Coolify deployment;
      with it on, it finds the deployment for the pushed commit and triggers one
-     itself if none appears within three minutes. It waits up to 25 minutes
+     itself if none appears within three minutes. A deployment still queued
+     for the branch head counts as the push's: it builds the head once it
+     starts. When Coolify drops a trigger because the app already has a queued
+     deployment, the publisher follows that queued deployment. It waits up to 25 minutes
      for `finished`; `failed` / cancelled / timeout stops with `deploy`.
    - Verify: fetch the target URL (retrying for a few minutes to get past
      caches) and record status code, `X-Robots-Tag` / meta robots noindex,
