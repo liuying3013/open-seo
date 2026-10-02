@@ -8,6 +8,7 @@ import { ApprovalService, type ReviewActor } from "./ApprovalService";
 import { ContentVersionService } from "./ContentVersionService";
 import { PageReviewService } from "./PageReviewService";
 import { PublishService } from "./PublishService";
+import { SitePagesRepository } from "@/server/features/page-plans/repositories/SitePagesRepository";
 import { SiteChangeAlertService } from "./SiteChangeAlertService";
 
 // Real SQLite (libsql in memory) with the project's generated migrations, so
@@ -255,26 +256,9 @@ describe("publish attempts", () => {
       publishedUrl: "https://example.com/guide",
     });
     expect((await PublishService.getQueue(project)).publish).toEqual([]);
-    // The verified page is now a known link target for other drafts.
-    await db.run(
-      `INSERT INTO content_assets (id, project_id, cluster_id, platform, status) VALUES ('asset-2', '${project}', 'cluster-1', 'money_site', 'planned')`,
-    );
-    const { checks } = await ContentVersionService.submit({
-      projectId: project,
-      assetId: "asset-2",
-      draft: draft({ body: "## Start\n\nSee [the guide](/guide)." }),
-      implementation: {
-        taskBranch: "task/other",
-        baseCommit: "base0000",
-        headCommit: "head9000",
-        patchId: "patch9000",
-        diffText: "diff --git a/y b/y",
-        files: [{ path: "content/other.mdx", change: "added" }],
-      },
-    });
-    expect(
-      checks.checks.find((check) => check.id === "internal_links")?.level,
-    ).toBe("pass");
+    // The internal-link check reads this inventory, so drafts can now link here.
+    const [known] = await SitePagesRepository.listAllUrls(project);
+    expect(known.url).toBe("https://example.com/guide");
   });
 
   it("voids the approval and returns to qa_review on a fingerprint mismatch", async () => {

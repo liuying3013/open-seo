@@ -3,11 +3,9 @@ import { ContentOpsError } from "@/server/features/content-ops/contentOpsErrors"
 import { AssetsRepository } from "@/server/features/content-ops/repositories/AssetsRepository";
 import { SitePagesService } from "@/server/features/page-plans/services/SitePagesService";
 import { getBytesFromR2, putBytesToR2 } from "@/server/lib/r2";
-import {
-  PUBLISH_TEXT_MATCH_THRESHOLD,
-  type PUBLISH_ERROR_STAGES,
-} from "@/shared/pagePublishing";
+import type { PUBLISH_ERROR_STAGES } from "@/shared/pagePublishing";
 import { parseStoredDraft } from "../rules/contentChecks";
+import { acceptanceFailure } from "../rules/publishAcceptance";
 import { ApprovalsRepository } from "../repositories/ApprovalsRepository";
 import {
   ACTIVE_ATTEMPT_STATUSES,
@@ -150,25 +148,6 @@ async function getQueue(projectId: string) {
     publish,
     rollbacks: rollbackItems,
   };
-}
-
-function acceptanceFailure(live: {
-  statusCode: number | null;
-  noindex: boolean | null;
-  textMatch: number | null;
-}): string | null {
-  if (live.statusCode !== 200) {
-    return `Live page returned status ${live.statusCode ?? "unknown"}, expected 200.`;
-  }
-  if (live.noindex === null) return "Live page noindex state was not reported.";
-  if (live.noindex) return "Live page is noindex.";
-  if (
-    live.textMatch === null ||
-    live.textMatch < PUBLISH_TEXT_MATCH_THRESHOLD
-  ) {
-    return `Live text match ${live.textMatch ?? "unknown"} is below ${PUBLISH_TEXT_MATCH_THRESHOLD}.`;
-  }
-  return null;
 }
 
 async function startPublishAttempt(
@@ -331,23 +310,11 @@ async function recordAttempt(input: RecordAttemptInput) {
       fields,
       publishedUrl,
     });
-    // A verified page joins the site page inventory right away, so the next
-    // drafts can link to a new page without an "unknown page" warning.
-    if (publishedUrl) {
-      await SitePagesService.importPages({
-        projectId: input.projectId,
-        pages: [
-          {
-            url: publishedUrl,
-            language: asset.language ?? undefined,
-            statusCode: 200,
-            noindex: false,
-            source: "publish",
-            lastCheckedAt: new Date().toISOString(),
-          },
-        ],
-      });
-    }
+    await SitePagesService.recordPublishedPage(
+      input.projectId,
+      publishedUrl,
+      asset.language,
+    );
     return { attemptId, status: "published" as const, reason: null };
   }
 

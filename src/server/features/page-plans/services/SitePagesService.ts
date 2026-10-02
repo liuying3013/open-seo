@@ -150,6 +150,31 @@ async function importPages({
   };
 }
 
+/**
+ * A page the publisher verified live joins the inventory right away, so later
+ * drafts can link to a new page without an "unknown page" warning.
+ */
+async function recordPublishedPage(
+  projectId: string,
+  url: string | null,
+  language: string | null,
+) {
+  if (!url) return;
+  await importPages({
+    projectId,
+    pages: [
+      {
+        url,
+        language: language ?? undefined,
+        statusCode: 200,
+        noindex: false,
+        source: "publish",
+        lastCheckedAt: new Date().toISOString(),
+      },
+    ],
+  });
+}
+
 function list(projectId: string, filter: ListSitePagesFilter) {
   return SitePagesRepository.list(projectId, filter);
 }
@@ -221,6 +246,7 @@ async function setClusterTargets(
 
 export const SitePagesService = {
   importPages,
+  recordPublishedPage,
   list,
   listLanguages,
   setClusterTargets,
