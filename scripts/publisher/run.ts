@@ -17,7 +17,7 @@ import { loadConfig, repoNameOf } from "./config";
 import { errorMessage } from "./git";
 import { OpenSeoClient } from "./openseo-client";
 import { processSite, type RunContext, type SiteJob } from "./site-run";
-import { acquireLock, loadState, saveState } from "./state";
+import { acquireLock, loadRepoState, saveRepoState } from "./state";
 
 const log = (line: string) =>
   console.log(`${new Date().toISOString()} ${line}`);
@@ -37,7 +37,8 @@ async function main(): Promise<number> {
         : null,
     sitesDir: config.sitesDir,
     dryRun,
-    state: loadState(config.sitesDir),
+    // Filled per site from disk once its lock is held.
+    state: { repos: {} },
     counts: {
       published: 0,
       rolledBack: 0,
@@ -82,12 +83,17 @@ async function main(): Promise<number> {
     }
     try {
       sitesProcessed += 1;
+      const saved = loadRepoState(config.sitesDir, repoName);
+      if (saved) ctx.state.repos[repoName] = saved;
       await processSite(ctx, job);
     } catch (error) {
       ctx.counts.failed += 1;
       log(`${job.label}: FAILED ${errorMessage(error)}`);
     } finally {
-      if (!dryRun) saveState(config.sitesDir, ctx.state);
+      const repoState = ctx.state.repos[repoName];
+      if (!dryRun && repoState) {
+        saveRepoState(config.sitesDir, repoName, repoState);
+      }
       release();
     }
   }

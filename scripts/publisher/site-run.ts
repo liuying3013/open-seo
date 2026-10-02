@@ -23,7 +23,7 @@ import { planRun } from "./queue";
 import { captureScreenshots } from "./screenshots";
 import {
   publisherDir,
-  saveState,
+  saveRepoState,
   type PublisherState,
   type RepoState,
 } from "./state";
@@ -161,7 +161,7 @@ function rememberPush(
   const state = ctx.state.repos[job.repoName];
   state.ownShas.push(commit);
   if (approvalId) state.handledApprovals.push(approvalId);
-  saveState(ctx.sitesDir, ctx.state);
+  saveRepoState(ctx.sitesDir, job.repoName, state);
 }
 
 /**

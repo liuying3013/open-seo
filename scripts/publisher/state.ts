@@ -1,4 +1,6 @@
-// Publisher state file and per-site lock, both under SITES_DIR/.publisher/.
+// Publisher state and per-site locks, both under SITES_DIR/.publisher/. Each
+// repository has its own state file, read and written only while its lock is
+// held, so concurrent runs on different sites never overwrite each other.
 
 import {
   closeSync,
@@ -33,21 +35,39 @@ export type PublisherState = z.infer<typeof stateSchema>;
 export const publisherDir = (sitesDir: string) =>
   path.join(sitesDir, ".publisher");
 
-export function loadState(sitesDir: string): PublisherState {
-  const file = path.join(publisherDir(sitesDir), "state.json");
-  if (!existsSync(file)) return { repos: {} };
-  return stateSchema.parse(JSON.parse(readFileSync(file, "utf8")));
+const repoStateFile = (sitesDir: string, repoName: string) =>
+  path.join(publisherDir(sitesDir), "state", `${repoName}.json`);
+
+/** A repository's state from disk. Call it while holding the repository's lock. */
+export function loadRepoState(
+  sitesDir: string,
+  repoName: string,
+): RepoState | undefined {
+  const file = repoStateFile(sitesDir, repoName);
+  if (existsSync(file)) {
+    return repoStateSchema.parse(JSON.parse(readFileSync(file, "utf8")));
+  }
+  // Older publishers kept every repository in one shared file.
+  const shared = path.join(publisherDir(sitesDir), "state.json");
+  if (!existsSync(shared)) return undefined;
+  return stateSchema.parse(JSON.parse(readFileSync(shared, "utf8"))).repos[
+    repoName
+  ];
 }
 
-export function saveState(sitesDir: string, state: PublisherState) {
-  const dir = publisherDir(sitesDir);
-  mkdirSync(dir, { recursive: true });
-  const file = path.join(dir, "state.json");
-  const next = structuredClone(state);
-  for (const repo of Object.values(next.repos)) {
-    repo.ownShas = repo.ownShas.slice(-MAX_REMEMBERED);
-    repo.handledApprovals = repo.handledApprovals.slice(-MAX_REMEMBERED);
-  }
+/** Write a repository's state. Call it while holding the repository's lock. */
+export function saveRepoState(
+  sitesDir: string,
+  repoName: string,
+  state: RepoState,
+) {
+  const file = repoStateFile(sitesDir, repoName);
+  mkdirSync(path.dirname(file), { recursive: true });
+  const next = {
+    ...state,
+    ownShas: state.ownShas.slice(-MAX_REMEMBERED),
+    handledApprovals: state.handledApprovals.slice(-MAX_REMEMBERED),
+  };
   writeFileSync(`${file}.tmp`, JSON.stringify(next, null, 2));
   renameSync(`${file}.tmp`, file);
 }

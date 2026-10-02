@@ -106,9 +106,13 @@ not show in full. Exit code 0 means it would pass live verification.
 
 ## State
 
-`SITES_DIR/.publisher/state.json` keeps, per repository, the last checked commit,
-the commits the publisher pushed, and the approvals it pushed for. Delete a
-repository's entry to re-baseline it (the next run will not report anything).
+`SITES_DIR/.publisher/state/<repo>.json` keeps, per repository, the last checked
+commit, the commits the publisher pushed, and the approvals it pushed for. A
+run reads and writes it only while holding that repository's lock, so runs that
+overlap on different sites cannot overwrite each other's records. Delete the
+file to re-baseline the repository (the next run will not report anything).
+State from older publishers in the shared `state.json` is read until a
+repository has its own file.
 
 ## Text match score
 
